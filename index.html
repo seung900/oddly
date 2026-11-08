@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SEUNGU — Archive</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header><a href="#top" class="logo">SEUNGU<span>.</span></a>
+        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="add"
+            class="outline">+ NEW ENTRY</button>
+    </header>
+    <main id="top">
+        <section class="hero">
+            <div class="kicker">A PERSONAL ARCHIVE · EST. 2026</div>
+            <h1>Things I love,<br><i>things I keep.</i></h1>
+            <div class="herofoot">
+                <p>좋아하는 음악, 맛있었던 한 끼, 오래 남겨두고 싶은 순간들.<br>승구의 사적인 취향 보관함.</p><span>SCROLL TO EXPLORE ↓</span>
+            </div>
+        </section>
+        <div class="indexline"><span>INDEX — 001</span><span>AN ONGOING COLLECTION OF LITTLE THINGS.</span></div>
+        <section class="section music" id="music">
+            <div class="sectionhead">
+                <div>
+                    <div class="kicker">01 / LISTENING ROOM</div>
+                    <h2>Music<span class="period">.</span></h2>
+                    <p>다시 듣고 싶은 소리와 그때의 마음.</p>
+                </div><button class="textbutton" data-add="music">+ ADD ALBUM ↗</button>
+            </div>
+            <div id="music-grid" class="cards album-grid"></div>
+        </section>
+        <section class="section eats" id="eats">
+            <div class="sectionhead">
+                <div>
+                    <div class="kicker">02 / FOOD JOURNAL</div>
+                    <h2>Eats<span class="period">.</span></h2>
+                    <p>기억해 두고 싶은 맛과 장소.</p>
+                </div><button class="textbutton" data-add="eats">+ ADD FOOD ↗</button>
+            </div>
+            <div id="eats-grid" class="cards food-grid"></div>
+        </section>
+        <section class="section moments" id="moments">
+            <div class="sectionhead">
+                <div>
+                    <div class="kicker">03 / PHOTO DIARY</div>
+                    <h2>Moments<span class="period">.</span></h2>
+                    <p>말이 필요 없는 사진도 괜찮아.</p>
+                </div><button class="textbutton" data-add="moments">+ ADD PHOTO ↗</button>
+            </div>
+            <div id="moments-grid" class="cards moment-grid"></div>
+        </section>
+        <section class="end"><span>ABOUT THIS PLACE</span>
+            <p>A quiet corner<br><i>of the internet.</i></p>
+            <div>잘 보이기 위해서가 아니라, 좋아하는 것을 잊지 않기 위해.<br><small>— seungu</small></div>
+        </section>
+    </main>
+    <footer><span>tmdmd9 ARCHIVE © 2026</span>
+        <div><button id="export" class="footerbtn">BACKUP ↓</button><button id="import" class="footerbtn">RESTORE
+                ↑</button><input id="restore-file" type="file" accept="application/json" hidden></div><a
+            href="#top">BACK TO TOP ↑</a>
+    </footer>
+    <dialog id="editor">
+        <form id="entry-form">
+            <div class="modalhead"><span>NEW ARCHIVE ENTRY</span><button type="button" id="close"
+                    aria-label="닫기">✕</button></div>
+            <h3 id="form-title">Add a record.</h3><label>카테고리<select name="type" id="type">
+                    <option value="music">MUSIC / 앨범</option>
+                    <option value="eats">EATS / 음식</option>
+                    <option value="moments">MOMENTS / 사진</option>
+                </select></label><label>사진 <small>(선택, JPG/PNG/WebP · 5MB 이하 권장)</small><input id="photo" type="file"
+                    accept="image/*"></label>
+            <div id="image-preview"></div>
+            <div id="music-fields" class="fields"><label>앨범명<input name="album"
+                        placeholder="Album title"></label><label>아티스트<input name="artist" placeholder="Artist"></label>
+                <label>소장 형태<select name="format"><option value="DIGITAL">DIGITAL</option><option value="LP">LP</option><option value="CD">CD</option></select></label>
+                <label class="wide">트랙 리스트 <small>(한 줄에 한 곡씩)</small><textarea name="tracks" rows="5" placeholder="01. 첫 번째 곡&#10;02. 두 번째 곡"></textarea></label>
+            </div>
+            <div id="eats-fields" class="fields" hidden><label>음식 이름<input name="food"
+                        placeholder="어떤 음식을 먹었나요?"></label><label>식당 이름<input name="restaurant"
+                        placeholder="식당명 (선택)"></label><label>식당 위치<input name="location"
+                        placeholder="주소 또는 지역 (선택)"></label></div>
+            <div id="moments-fields" class="fields" hidden><label>사진 제목 <small>(선택)</small><input name="momentTitle"
+                        placeholder="A little moment"></label></div><label id="rating-label">나의 평점 <span
+                    id="rating-value">4.0 / 5</span><input id="rating" name="rating" type="range" min="0.5" max="5"
+                    step="0.5" value="4"></label><label>코멘트 <small>(선택)</small><textarea name="comment" rows="3"
+                    placeholder="어떤 기억으로 남았나요?"></textarea></label>
+            <p id="form-error" role="alert"></p><button class="save" type="submit">SAVE TO ARCHIVE ↗</button>
+        </form>
+    </dialog>
+    <script src="script.js"></script>
+</body>
+
+</html>
