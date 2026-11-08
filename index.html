@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>SEUNGU — Archive</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
@@ -73,6 +73,12 @@
                 </select></label><label>사진 <small>(선택, JPG/PNG/WebP · 5MB 이하 권장)</small><input id="photo" type="file"
                     accept="image/*"></label>
             <div id="image-preview"></div>
+            <div id="music-search-panel" hidden>
+                <label for="music-search">앨범 자동 검색 <small>(MusicBrainz)</small></label>
+                <div class="search-row"><input id="music-search" type="search" placeholder='예: IGOR AND artist:"Tyler, The Creator"' autocomplete="off"><button id="search-album" type="button">SEARCH ↗</button></div>
+                <p id="search-status" role="status"></p>
+                <div id="search-results"></div>
+            </div>
             <div id="music-fields" class="fields"><label>앨범명<input name="album"
                         placeholder="Album title"></label><label>아티스트<input name="artist" placeholder="Artist"></label>
                 <label>소장 형태<select name="format"><option value="DIGITAL">DIGITAL</option><option value="LP">LP</option><option value="CD">CD</option></select></label>
@@ -90,7 +96,7 @@
             <p id="form-error" role="alert"></p><button class="save" type="submit">SAVE TO ARCHIVE ↗</button>
         </form>
     </dialog>
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 </body>
 
 </html>

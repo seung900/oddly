@@ -3,12 +3,13 @@ const KEY='seungu-archive-v1';
 const $=selector=>document.querySelector(selector);
 const editor=$('#editor'),form=$('#entry-form'),type=$('#type'),photo=$('#photo');
 let entries=[];
+let searchedCover='';
 try{const stored=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(stored))entries=stored;}catch(e){console.warn('저장 데이터 읽기 실패',e)}
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(entries));return true;}catch(e){alert('브라우저 저장 공간이 부족해요. 사진을 줄이거나 BACKUP으로 기록을 먼저 보관해주세요.');return false;}}
-function switchType(){const t=type.value;['music','eats','moments'].forEach(x=>{$(`#${x}-fields`).hidden=x!==t});$('#rating-label').hidden=t==='moments';$('#form-title').textContent=({music:'Add an album.',eats:'Add a meal.',moments:'Keep a moment.'})[t];}
-function openEditor(t='music'){form.reset();$('#form-error').textContent='';$('#image-preview').innerHTML='';type.value=t;$('#rating-value').textContent='4.0 / 5';switchType();editor.showModal();}
+function switchType(){const t=type.value;$('#music-search-panel').hidden=t!=='music';['music','eats','moments'].forEach(x=>{$(`#${x}-fields`).hidden=x!==t});$('#rating-label').hidden=t==='moments';$('#form-title').textContent=({music:'Add an album.',eats:'Add a meal.',moments:'Keep a moment.'})[t];}
+function openEditor(t='music'){searchedCover='';$('#search-results').innerHTML='';$('#search-status').textContent='';form.reset();$('#form-error').textContent='';$('#image-preview').innerHTML='';type.value=t;$('#rating-value').textContent='4.0 / 5';switchType();editor.showModal();}
 $('#add').addEventListener('click',()=>openEditor('music'));
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.add)));
 $('#close').addEventListener('click',()=>editor.close());
@@ -17,9 +18,64 @@ type.addEventListener('change',switchType);
 $('#rating').addEventListener('input',e=>$('#rating-value').textContent=`${Number(e.target.value).toFixed(1)} / 5`);
 photo.addEventListener('change',()=>{const f=photo.files[0];$('#image-preview').innerHTML='';if(f){const img=document.createElement('img');img.src=URL.createObjectURL(f);img.onload=()=>URL.revokeObjectURL(img.src);$('#image-preview').append(img);}});
 function imageData(file){return new Promise((resolve,reject)=>{if(!file)return resolve('');if(!file.type.startsWith('image/'))return reject(new Error('이미지 파일을 선택해 주세요.'));if(file.size>10*1024*1024)return reject(new Error('사진은 10MB 이하로 선택해 주세요.'));const reader=new FileReader();reader.onerror=()=>reject(new Error('사진을 읽을 수 없어요.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('이미지를 열 수 없어요.'));img.onload=()=>{const scale=Math.min(1,1100/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.75));};img.src=reader.result;};reader.readAsDataURL(file);});}
-form.addEventListener('submit',async e=>{e.preventDefault();const data=new FormData(form),t=type.value;const album=String(data.get('album')||'').trim(),artist=String(data.get('artist')||'').trim(),food=String(data.get('food')||'').trim(),momentTitle=String(data.get('momentTitle')||'').trim();if(t==='music'&&(!album||!artist)){ $('#form-error').textContent='앨범명과 아티스트를 입력해 주세요.';return;}if(t==='eats'&&!food){$('#form-error').textContent='음식 이름을 입력해 주세요.';return;}if(t==='moments'&&!photo.files[0]&&!momentTitle){$('#form-error').textContent='사진이나 제목을 입력해 주세요.';return;}const saveBtn=$('.save');saveBtn.disabled=true;saveBtn.textContent='SAVING...';try{const image=await imageData(photo.files[0]);const entry={id:uid(),type:t,image,album,artist,food,restaurant:String(data.get('restaurant')||'').trim(),location:String(data.get('location')||'').trim(),momentTitle,format:String(data.get('format')||'DIGITAL'),rating:Number(data.get('rating')||4),comment:String(data.get('comment')||'').trim(),tracks:String(data.get('tracks')||'').split('\n').map(s=>s.trim()).filter(Boolean).map(name=>({name,liked:false})),created:Date.now()};entries.unshift(entry);if(!persist()){entries.shift();return;}editor.close();render();}catch(err){$('#form-error').textContent=err.message||'저장에 실패했어요.';}finally{saveBtn.disabled=false;saveBtn.textContent='SAVE TO ARCHIVE ↗';}});
+form.addEventListener('submit',async e=>{e.preventDefault();const data=new FormData(form),t=type.value;const album=String(data.get('album')||'').trim(),artist=String(data.get('artist')||'').trim(),food=String(data.get('food')||'').trim(),momentTitle=String(data.get('momentTitle')||'').trim();if(t==='music'&&(!album||!artist)){ $('#form-error').textContent='앨범명과 아티스트를 입력해 주세요.';return;}if(t==='eats'&&!food){$('#form-error').textContent='음식 이름을 입력해 주세요.';return;}if(t==='moments'&&!photo.files[0]&&!momentTitle){$('#form-error').textContent='사진이나 제목을 입력해 주세요.';return;}const saveBtn=$('.save');saveBtn.disabled=true;saveBtn.textContent='SAVING...';try{const image=photo.files[0]?await imageData(photo.files[0]):(t==='music'?searchedCover:'');const entry={id:uid(),type:t,image,album,artist,food,restaurant:String(data.get('restaurant')||'').trim(),location:String(data.get('location')||'').trim(),momentTitle,format:String(data.get('format')||'DIGITAL'),rating:Number(data.get('rating')||4),comment:String(data.get('comment')||'').trim(),tracks:String(data.get('tracks')||'').split('\n').map(s=>s.trim()).filter(Boolean).map(name=>({name,liked:false})),created:Date.now()};entries.unshift(entry);if(!persist()){entries.shift();return;}editor.close();render();}catch(err){$('#form-error').textContent=err.message||'저장에 실패했어요.';}finally{saveBtn.disabled=false;saveBtn.textContent='SAVE TO ARCHIVE ↗';}});
 function render(){for(const t of ['music','eats','moments']){const grid=$(`#${t}-grid`);grid.innerHTML='';const filtered=entries.filter(x=>x.type===t);if(!filtered.length){grid.innerHTML='<div class="empty">아직 기록이 없어요. 첫 번째 이야기를 남겨보세요 ↗</div>';continue;}for(const e of filtered){const card=document.createElement('article');card.className='entry';const title=t==='music'?e.album:t==='eats'?e.food:e.momentTitle||'Untitled moment';const subtitle=t==='music'?e.artist:t==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):new Date(e.created||Date.now()).toLocaleDateString('ko-KR');const art=e.image?`<img src="${escapeHTML(e.image)}" alt="${escapeHTML(title)}">`:`<span class="placeholder">${t==='music'?'♪':t==='eats'?'✳':'◌'}</span>`;card.innerHTML=`<div class="art">${art}</div><h3>${escapeHTML(title)}</h3><div class="sub">${escapeHTML(subtitle)}</div>${t==='music'?`<span class="format">${escapeHTML(e.format||'DIGITAL')}</span>`:''}${t!=='moments'?`<div class="score">★ ${Number(e.rating||0).toFixed(1)} / 5</div>`:''}${e.comment?`<p class="comment">${escapeHTML(e.comment)}</p>`:''}${t==='music'&&Array.isArray(e.tracks)&&e.tracks.length?`<div class="tracks">${e.tracks.map((track,i)=>`<div class="track"><span>${escapeHTML(track.name)}</span><button type="button" class="heart ${track.liked?'liked':''}" data-track="${i}" aria-label="${track.liked?'좋아요 취소':'좋아요'}" aria-pressed="${!!track.liked}">${track.liked?'♥':'♡'}</button></div>`).join('')}</div>`:''}<button class="delete" type="button">DELETE ENTRY ×</button>`;card.querySelector('.delete').addEventListener('click',()=>{if(confirm('이 기록을 삭제할까요?')){const old=entries;entries=entries.filter(x=>x.id!==e.id);if(!persist())entries=old;render();}});card.querySelectorAll('[data-track]').forEach(b=>b.addEventListener('click',()=>{const track=e.tracks[Number(b.dataset.track)];track.liked=!track.liked;if(!persist())track.liked=!track.liked;render();}));grid.append(card);}}}
 $('#export').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:1,entries},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`seungu-archive-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 $('#import').addEventListener('click',()=>$('#restore-file').click());
 $('#restore-file').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const parsed=JSON.parse(await file.text());const incoming=Array.isArray(parsed)?parsed:parsed.entries;if(!Array.isArray(incoming)||!incoming.every(x=>x&&['music','eats','moments'].includes(x.type)&&typeof x.id==='string'))throw Error('올바른 아카이브 백업 파일이 아니에요.');if(!confirm('현재 기록을 백업 파일의 기록으로 교체할까요?'))return;const old=entries;entries=incoming;if(!persist()){entries=old;return;}render();alert('복원이 완료됐어요!');}catch(err){alert(err.message||'복원에 실패했어요.');}finally{e.target.value='';}});
+
+// MusicBrainz: search release groups and load tracklists from a representative release.
+const searchInput=$('#music-search'), searchButton=$('#search-album');
+const mbFetch=async url=>{const res=await fetch(url,{headers:{Accept:'application/json'}});if(!res.ok)throw Error('음악 정보를 가져오지 못했어요. 잠시 후 다시 시도해 주세요.');return res.json();};
+const artistName=g=>(g['artist-credit']||[]).map(a=>a.name||a.artist?.name||'').join('')||'Unknown artist';
+const coverUrl=id=>`https://coverartarchive.org/release-group/${encodeURIComponent(id)}/front-250`;
+async function runAlbumSearch(){
+ const query=searchInput.value.trim(),status=$('#search-status'),results=$('#search-results');
+ if(!query){status.textContent='앨범명이나 아티스트를 입력해 주세요.';return;}
+ searchButton.disabled=true;status.textContent='앨범 검색 중...';results.innerHTML='';
+ try{
+  const data=await mbFetch(`https://musicbrainz.org/ws/2/release-group/?query=${encodeURIComponent(query)}&fmt=json&limit=12`);
+  const groups=(data['release-groups']||[]).filter(g=>g.title);
+  if(!groups.length){status.textContent='검색 결과가 없어요. 앨범명과 아티스트를 함께 입력해 보세요.';return;}
+  status.textContent='앨범을 선택하면 제목, 아티스트, 트랙 목록을 채워줘요.';
+  for(const g of groups){
+   const btn=document.createElement('button');btn.type='button';btn.className='search-result';
+   const img=document.createElement('img');img.alt='';img.loading='lazy';img.src=coverUrl(g.id);img.onerror=()=>{img.style.visibility='hidden';};
+   const label=document.createElement('span');label.textContent=g.title;
+   const sub=document.createElement('small');sub.textContent=`${artistName(g)} · ${g['first-release-date']||'발매일 미상'}`;label.append(sub);
+   btn.append(img,label);btn.addEventListener('click',()=>selectAlbum(g));results.append(btn);
+  }
+ }catch(e){status.textContent=e.message||'검색에 실패했어요. 인터넷 연결을 확인해 주세요.';}
+ finally{searchButton.disabled=false;}
+}
+async function selectAlbum(g){
+ const status=$('#search-status');status.textContent='트랙 목록 불러오는 중...';
+ form.elements.album.value=g.title;form.elements.artist.value=artistName(g);
+ searchedCover=''; 
+ try{
+  const releases=await mbFetch(`https://musicbrainz.org/ws/2/release/?release-group=${encodeURIComponent(g.id)}&fmt=json&limit=25`);
+  const release=(releases.releases||[]).find(r=>r.status==='Official')||(releases.releases||[])[0];
+  if(release){
+   const detail=await mbFetch(`https://musicbrainz.org/ws/2/release/${encodeURIComponent(release.id)}?inc=recordings&fmt=json`);
+   const tracks=(detail.media||[]).flatMap(m=>m.tracks||[]).map(t=>t.title).filter(Boolean);
+   if(tracks.length)form.elements.tracks.value=tracks.map((t,i)=>`${String(i+1).padStart(2,'0')}. ${t}`).join('\n');
+  }
+  // Save cover from Cover Art Archive if cross-origin canvas access is allowed.
+  try{
+   const cover=coverUrl(g.id);
+   const response=await fetch(cover);
+   if(response.ok){
+    const blob=await response.blob();
+    const file=new File([blob],'cover.jpg',{type:blob.type||'image/jpeg'});
+    searchedCover=await imageData(file);
+    $('#image-preview').innerHTML='';
+    const preview=document.createElement('img');preview.src=searchedCover;preview.alt='앨범 커버';$('#image-preview').append(preview);
+   }
+  }catch(e){console.info('커버 이미지는 자동 저장하지 못했어요. 사진을 직접 선택할 수 있습니다.',e);}
+  status.textContent='앨범 정보를 채웠어요! 확인 후 저장하세요.';
+ }catch(e){status.textContent='제목과 아티스트는 채웠어요. 트랙 목록은 직접 입력해 주세요.';}
+}
+searchButton.addEventListener('click',runAlbumSearch);
+searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runAlbumSearch();}});
+
 switchType();render();
