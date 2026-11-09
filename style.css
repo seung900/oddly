@@ -125,3 +125,7 @@ button:focus-visible,a:focus-visible{outline-color:var(--rust)}
 #personal-edit-form select,#personal-edit-form textarea{width:100%;border:1px solid var(--line);background:transparent;padding:12px;color:var(--ink)}
 #personal-edit-form input[type=range]{width:100%;accent-color:var(--olive,#565e45)}
 #personal-edit-error{color:#a43c38;font-size:12px;margin:0}
+
+/* Compact edit action: keep the album shelf and text layout intact */
+.entry .edit-entry{display:inline-flex!important;align-items:center;justify-content:center;width:auto!important;max-width:max-content;min-width:0!important;min-height:0!important;flex:0 0 auto!important;align-self:flex-start!important;padding:5px 8px!important;margin:7px 8px 5px 0!important;font-size:10px!important;line-height:1.3!important;letter-spacing:0!important;border:1px solid var(--line);background:transparent;box-shadow:none;border-radius:2px;}
+.entry .edit-entry:hover{background:#e8e0d1;}
