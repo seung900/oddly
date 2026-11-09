@@ -1,5 +1,4 @@
  'use strict';
-// Supabase public project URL and publishable key (not secret credentials).
 const CLOUD_URL='https://gdxczepnytobckajugay.supabase.co';
 const CLOUD_KEY='sb_publishable_VZTrdf-ugJNarK8dDhyhjQ_sidI9okx';
 const cloudClient=window.supabase?.createClient(CLOUD_URL,CLOUD_KEY);
@@ -7,96 +6,139 @@ const cloudStatus=document.querySelector('#auth-status');
 const cloudDialog=document.querySelector('#auth-dialog');
 const cloudButton=document.querySelector('#auth-open');
 const ownerKey='seungu-archive-cloud-owner';
-let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudSuppress=false,cloudLastSave=Promise.resolve();
+let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
 function cloudMessage(msg){cloudStatus.textContent=msg;}
 function cloudLocalSave(){localStorage.setItem(KEY,JSON.stringify(entries));render();}
 function cloudUi(){
  document.querySelector('#auth-logged-out').hidden=!!cloudUser;
  document.querySelector('#auth-logged-in').hidden=!cloudUser;
  document.querySelector('#auth-user').textContent=cloudUser?`로그인: ${cloudUser.email}`:'';
+ document.querySelector('#profile-open').hidden=!cloudUser;
  cloudButton.textContent=cloudUser?'☁ SYNC ON':'LOGIN / SYNC';
+ document.querySelector('#discover-status').textContent=cloudUser?'다른 회원을 불러오려면 REFRESH를 눌러주세요.':'로그인하면 다른 회원의 공개 기록을 구경할 수 있어요.';
 }
 async function cloudPull(first=false){
  if(!cloudUser||cloudBusy)return;
  cloudBusy=true;
+ const userId=cloudUser.id,generation=cloudGeneration;
  try{
-  const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',cloudUser.id);
+  await cloudLastSave;
+  const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId);
   if(error)throw error;
+  if(generation!==cloudGeneration||cloudUser?.id!==userId)return;
   const remote=(data||[]).map(x=>x.entry_data).filter(x=>x&&typeof x.id==='string');
-  const linkedOwner=localStorage.getItem(ownerKey);
-  const importLocal=first && linkedOwner!==cloudUser.id;
-  const localOnly=importLocal?entries.filter(e=>!remote.some(r=>r.id===e.id)):[];
-  if(localOnly.length){
-   const rows=localOnly.map(e=>({id:e.id,user_id:cloudUser.id,entry_data:e}));
-   const {error:upErr}=await cloudClient.from('archive_entries').upsert(rows,{onConflict:'id'});
-   if(upErr)throw upErr;
+  const owner=localStorage.getItem(ownerKey);
+  // Only import legacy local records if they have no associated account AND the user approves.
+  let localOnly=[];
+  if(first&&!owner&&entries.length&&confirm(`이 브라우저의 기존 기록 ${entries.length}개를 현재 계정으로 가져올까요?\n다른 사람의 기록이라면 취소하세요.`)){
+   localOnly=entries.filter(e=>!remote.some(r=>r.id===e.id)).map(e=>({...e,visibility:'private'}));
+   if(localOnly.length){const {error:upErr}=await cloudClient.from('archive_entries').upsert(localOnly.map(e=>({id:e.id,user_id:userId,entry_data:e})),{onConflict:'id'});if(upErr)throw upErr;}
   }
-  cloudSuppress=true;
-  entries=[...remote,...localOnly].sort((a,b)=>(b.created||0)-(a.created||0));
-  cloudLocalSave();
-  localStorage.setItem(ownerKey,cloudUser.id);
-  cloudSuppress=false;
-  cloudMessage(`동기화 완료! ${entries.length}개 기록을 불러왔어요.${localOnly.length?' 이 기기의 기존 기록 '+localOnly.length+'개도 업로드했어요.':''}`);
- }catch(e){cloudMessage('동기화 실패: '+(e.message||e));cloudSuppress=false;}
+  if(generation!==cloudGeneration||cloudUser?.id!==userId)return;
+  entries=[...remote,...localOnly].map(e=>({...e,visibility:e.visibility==='public'?'public':'private'})).sort((a,b)=>(b.created||0)-(a.created||0));
+  localStorage.setItem(ownerKey,userId);cloudLocalSave();
+  cloudMessage(`동기화 완료! ${entries.length}개 기록.${localOnly.length?' 기존 기록 '+localOnly.length+'개 가져옴.':''}`);
+ }catch(e){cloudMessage('동기화 실패: '+(e.message||e));}
  finally{cloudBusy=false;}
 }
 function cloudQueueSave(){
- if(!cloudUser||cloudSuppress)return;
+ if(!cloudUser)return;
  clearTimeout(cloudTimer);
+ const userId=cloudUser.id,generation=cloudGeneration;
  cloudTimer=setTimeout(()=>{
-  const snapshot=entries.map(e=>({...e}));
-  cloudLastSave=cloudLastSave.then(async()=>{
-   if(!cloudUser||!snapshot.length)return;
-   const {error}=await cloudClient.from('archive_entries').upsert(snapshot.map(e=>({id:e.id,user_id:cloudUser.id,entry_data:e})),{onConflict:'id'});
-   if(error)throw error;
-   cloudMessage('클라우드에 저장됐어요 ✓');
-  }).catch(e=>cloudMessage('클라우드 저장 실패: '+(e.message||e)+'\n기기 기록은 남아 있어요. BACKUP으로 보관해 주세요.'));
+  const snapshot=entries.map(e=>({...e,visibility:e.visibility==='public'?'public':'private'}));
+  cloudLastSave=cloudLastSave.catch(()=>{}).then(async()=>{
+   if(!cloudUser||cloudUser.id!==userId||generation!==cloudGeneration||!snapshot.length)return;
+   const {error}=await cloudClient.from('archive_entries').upsert(snapshot.map(e=>({id:e.id,user_id:userId,entry_data:e})),{onConflict:'id'});
+   if(error)throw error;cloudMessage('클라우드에 저장됐어요 ✓');
+  }).catch(e=>cloudMessage('클라우드 저장 실패: '+(e.message||e)+'\nBACKUP으로 기록을 보관해 주세요.'));
  },350);
 }
 function cloudRemoveEntry(id){
  if(!cloudUser)return;
- cloudLastSave=cloudLastSave.then(async()=>{
-  const {error}=await cloudClient.from('archive_entries').delete().eq('id',id).eq('user_id',cloudUser.id);
+ const userId=cloudUser.id;
+ cloudLastSave=cloudLastSave.catch(()=>{}).then(async()=>{
+  if(cloudUser?.id!==userId)return;
+  const {error}=await cloudClient.from('archive_entries').delete().eq('id',id).eq('user_id',userId);
   if(error)throw error;
  }).catch(e=>cloudMessage('클라우드 삭제 실패: '+(e.message||e)));
 }
-window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry};
+window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser};
 cloudButton.addEventListener('click',()=>cloudDialog.showModal());
 document.querySelector('#auth-close').addEventListener('click',()=>cloudDialog.close());
 async function cloudAuth(action){
- if(!cloudClient){cloudMessage('Supabase 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');return;}
- const email=document.querySelector('#auth-email').value.trim();
- const password=document.querySelector('#auth-password').value;
+ if(!cloudClient){cloudMessage('Supabase 라이브러리를 불러오지 못했어요.');return;}
+ const email=document.querySelector('#auth-email').value.trim(),password=document.querySelector('#auth-password').value;
  if(!email||password.length<6){cloudMessage('이메일과 6자 이상의 비밀번호를 입력해 주세요.');return;}
  cloudMessage('처리 중...');
  try{
-  const result=action==='signup'?await cloudClient.auth.signUp({email,password}):await cloudClient.auth.signInWithPassword({email,password});
+  const result=action==='signup'?await cloudClient.auth.signUp({email,password,options:{emailRedirectTo:'https://seung900.github.io/seungu-archive/'}}):await cloudClient.auth.signInWithPassword({email,password});
   if(result.error)throw result.error;
-  if(action==='signup'&&!result.data.session)cloudMessage('가입 확인 이메일을 보냈어요. 이메일의 인증 링크를 누른 뒤 로그인해 주세요.');
-  else cloudMessage('로그인 성공! 동기화를 시작할게요.');
+  cloudMessage(action==='signup'&&!result.data.session?'가입 확인 이메일을 보냈어요. 인증 링크를 누른 뒤 로그인해 주세요.':'로그인 성공! 동기화를 시작할게요.');
  }catch(e){cloudMessage('로그인/가입 실패: '+(e.message||e));}
 }
 document.querySelector('#auth-sign-in').addEventListener('click',()=>cloudAuth('login'));
 document.querySelector('#auth-sign-up').addEventListener('click',()=>cloudAuth('signup'));
 document.querySelector('#auth-sync-now').addEventListener('click',async()=>{await cloudLastSave;await cloudPull();});
 document.querySelector('#auth-sign-out').addEventListener('click',async()=>{
- if(!cloudClient)return;
- await cloudLastSave;
- const {error}=await cloudClient.auth.signOut();
- if(error){cloudMessage(error.message);return;}
- cloudUser=null;entries=[];cloudLocalSave();cloudUi();cloudMessage('로그아웃했어요. 클라우드 기록은 유지돼요.');
+ if(!cloudClient)return;clearTimeout(cloudTimer);await cloudLastSave;
+ const {error}=await cloudClient.auth.signOut();if(error){cloudMessage(error.message);return;}
+ cloudUser=null;cloudGeneration++;entries=[];cloudLocalSave();cloudUi();clearDiscovery();cloudMessage('로그아웃했어요. 클라우드 기록은 유지돼요.');
 });
+function clearDiscovery(){document.querySelector('#people-list').innerHTML='';document.querySelector('#public-entries').innerHTML='';document.querySelector('#public-profile').hidden=true;}
+function profileText(id,value){document.querySelector(id).textContent=value;}
+const profileDialog=document.querySelector('#profile-dialog');
+document.querySelector('#profile-open').addEventListener('click',async()=>{
+ if(!cloudUser)return;profileDialog.showModal();profileText('#profile-status','불러오는 중...');
+ const {data,error}=await cloudClient.from('archive_profiles').select('display_name,bio').eq('id',cloudUser.id).maybeSingle();
+ if(error){profileText('#profile-status',error.message+' — 먼저 SQL 설정을 완료해 주세요.');return;}
+ document.querySelector('#profile-name').value=data?.display_name||'';
+ document.querySelector('#profile-bio').value=data?.bio||'';profileText('#profile-status','');
+});
+document.querySelector('#profile-close').addEventListener('click',()=>profileDialog.close());
+document.querySelector('#profile-save').addEventListener('click',async()=>{
+ if(!cloudUser)return;const name=document.querySelector('#profile-name').value.trim(),bio=document.querySelector('#profile-bio').value.trim();
+ if(!name){profileText('#profile-status','닉네임을 입력해 주세요.');return;}
+ const {error}=await cloudClient.from('archive_profiles').upsert({id:cloudUser.id,display_name:name,bio},{onConflict:'id'});
+ profileText('#profile-status',error?'저장 실패: '+error.message:'프로필이 저장됐어요 ✓');
+});
+const peopleList=document.querySelector('#people-list');
+async function loadPeople(){
+ clearDiscovery();if(!cloudUser){profileText('#discover-status','로그인 후 이용할 수 있어요.');return;}
+ profileText('#discover-status','회원 목록 불러오는 중...');
+ const {data,error}=await cloudClient.from('archive_profiles').select('id,display_name,bio').order('created_at',{ascending:false}).limit(100);
+ if(error){profileText('#discover-status','목록을 불러오지 못했어요: '+error.message+' (SQL 설정을 확인해 주세요.)');return;}
+ profileText('#discover-status',data?.length?`${data.length}명의 회원 프로필`:'아직 공개된 회원 프로필이 없어요. MY PROFILE에서 첫 프로필을 만들어 보세요.');
+ for(const person of data||[]){const b=document.createElement('button');b.className='person-card';b.type='button';const name=document.createElement('strong');name.textContent=person.display_name;const bio=document.createElement('small');bio.textContent=person.bio||'아직 소개가 없어요.';b.append(name,bio);b.addEventListener('click',()=>openPerson(person));peopleList.append(b);}
+}
+async function openPerson(person){
+ if(!cloudUser)return;peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;
+ profileText('#public-profile-title',person.display_name);profileText('#public-profile-bio',person.bio||'');
+ profileText('#discover-status','공개 기록을 불러오는 중...');const grid=document.querySelector('#public-entries');grid.innerHTML='';
+ const {data,error}=await cloudClient.from('archive_entries').select('entry_data').eq('user_id',person.id).eq('entry_data->>visibility','public').order('created_at',{ascending:false}).limit(100);
+ if(error){profileText('#discover-status','기록을 불러오지 못했어요: '+error.message);return;}
+ profileText('#discover-status',`${data?.length||0}개의 공개 기록`);
+ if(!data?.length){grid.textContent='아직 공개한 기록이 없어요.';return;}
+ for(const row of data){const e=row.entry_data;if(!e||!['music','eats','moments'].includes(e.type))continue;
+  const card=document.createElement('article');card.className='entry';const art=document.createElement('div');art.className='art';
+  if(typeof e.image==='string'&&e.image.startsWith('data:image/')){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent='♪';art.append(mark);}card.append(art);
+  const title=document.createElement('h3');title.textContent=e.type==='music'?e.album:e.type==='eats'?e.food:e.momentTitle||'Untitled moment';card.append(title);
+  const sub=document.createElement('div');sub.className='sub';sub.textContent=e.type==='music'?e.artist:e.type==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):'MOMENTS';card.append(sub);
+  if(e.type!=='moments'){const score=document.createElement('div');score.className='score';score.textContent=`★ ${Number(e.rating||0).toFixed(1)} / 5`;card.append(score);}
+  if(e.comment){const comment=document.createElement('p');comment.className='comment';comment.textContent=e.comment;card.append(comment);}
+  if(e.type==='music'&&Array.isArray(e.tracks)){const tracks=document.createElement('div');tracks.className='tracks';for(const t of e.tracks){const line=document.createElement('div');line.className='track';line.textContent=(t.liked?'♥ ':'')+String(t.name||'');tracks.append(line);}card.append(tracks);}
+  grid.append(card);
+ }
+}
+document.querySelector('#people-back').addEventListener('click',()=>{peopleList.hidden=false;document.querySelector('#public-profile').hidden=true;profileText('#discover-status','회원 목록');});
+document.querySelector('#discover-refresh').addEventListener('click',loadPeople);
 if(cloudClient){
  cloudClient.auth.onAuthStateChange((event,session)=>{
-  const newUser=session?.user||null;
-  if(newUser?.id===cloudUser?.id)return;
-  cloudUser=newUser;cloudUi();
-  if(newUser)setTimeout(()=>cloudPull(true),0);
+  const next=session?.user||null;if(next?.id===cloudUser?.id)return;
+  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;if(localStorage.getItem(ownerKey)) {entries=[];cloudLocalSave();}cloudUi();clearDiscovery();
+  if(next)setTimeout(()=>cloudPull(true),0);
  });
- cloudClient.auth.getSession().then(({data,error})=>{
-  if(error)cloudMessage(error.message);
-  else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudUi();cloudPull(true);}
- }).catch(e=>cloudMessage(e.message));
+ cloudClient.auth.getSession().then(({data,error})=>{if(error)cloudMessage(error.message);else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudUi();cloudPull(true);}}).catch(e=>cloudMessage(e.message));
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cloudUser)cloudPull();});
  window.addEventListener('focus',()=>{if(cloudUser)cloudPull();});
 }else cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');

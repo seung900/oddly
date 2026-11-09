@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>SEUNGU — Archive</title>
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 
 <body>
     <header><a href="#top" class="logo">SEUNGU<span>.</span></a>
-        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
+        <nav><a href="#discover">DISCOVER</a><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
             class="outline">+ NEW ENTRY</button>
     </header>
     <main id="top">
@@ -18,10 +18,10 @@
             <div class="kicker">A PERSONAL ARCHIVE · EST. 2026</div>
             <h1>Things I love,<br><i>things I keep.</i></h1>
             <div class="herofoot">
-                <p>좋아하는 음악, 맛있었던 한 끼, 오래 남겨두고 싶은 순간들.<br>승구의 사적인 취향 보관함.</p><span>SCROLL TO EXPLORE ↓</span>
+                <p>좋아하는 음악, 맛있었던 한 끼, 오래 남겨두고 싶은 순간들.<br>우리의 사적인 취향 보관함.</p><span>SCROLL TO EXPLORE ↓</span>
             </div>
         </section>
-        <div class="indexline"><span>INDEX — 001</span><span>AN ONGOING COLLECTION OF LITTLE THINGS.</span></div>
+        <section class="section" id="discover"><div class="sectionhead"><div><div class="kicker">00 / COMMUNITY</div><h2>Discover<span class="period">.</span></h2><p>다른 사람의 취향을 만나보세요. 로그인한 회원만 볼 수 있어요.</p></div><button class="textbutton" id="discover-refresh" type="button">REFRESH ↗</button></div><p id="discover-status" role="status"></p><div id="people-list" class="people-list"></div><div id="public-profile" hidden><button class="textbutton" id="people-back" type="button">← ALL PEOPLE</button><h3 id="public-profile-title"></h3><p id="public-profile-bio"></p><div id="public-entries" class="cards album-grid"></div></div></section><div class="indexline"><span>INDEX — 001</span><span>AN ONGOING COLLECTION OF LITTLE THINGS.</span></div>
         <section class="section music" id="music">
             <div class="sectionhead">
                 <div>
@@ -75,6 +75,7 @@
       <p id="auth-status" role="status"></p>
       <p class="auth-note">기록은 이 계정의 클라우드에 저장돼요. 중요한 사진과 기록은 아래 BACKUP으로 별도 보관하는 걸 권장해요.</p>
     </dialog>
+    <dialog id="profile-dialog"><div class="modalhead"><span>MY PROFILE</span><button id="profile-close" type="button">✕</button></div><h3>Introduce yourself.</h3><label>닉네임<input id="profile-name" maxlength="40" placeholder="닉네임"></label><label>자기소개<textarea id="profile-bio" maxlength="300" rows="4" placeholder="좋아하는 것들을 소개해 주세요."></textarea></label><p id="profile-status" role="status"></p><button id="profile-save" class="save" type="button">SAVE PROFILE ↗</button></dialog>
     <dialog id="editor">
         <form id="entry-form">
             <div class="modalhead"><span>NEW ARCHIVE ENTRY</span><button type="button" id="close"
@@ -106,12 +107,12 @@
                     id="rating-value">4.0 / 5</span><input id="rating" name="rating" type="range" min="0.5" max="5"
                     step="0.5" value="4"></label><label>코멘트 <small>(선택)</small><textarea name="comment" rows="3"
                     placeholder="어떤 기억으로 남았나요?"></textarea></label>
-            <p id="form-error" role="alert"></p><button class="save" type="submit">SAVE TO ARCHIVE ↗</button>
+            <label>공개 범위<select name="visibility" id="visibility"><option value="private">🔒 나만 보기</option><option value="public">🌐 회원에게 공개</option></select></label><p id="form-error" role="alert"></p><button class="save" type="submit">SAVE TO ARCHIVE ↗</button>
         </form>
     </dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="script.js?v=3"></script>
-    <script src="sync.js?v=3"></script>
+    <script src="script.js?v=4"></script>
+    <script src="sync.js?v=4"></script>
 </body>
 
 </html>
