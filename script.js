@@ -143,6 +143,8 @@ async function openArtworkPreview(entry){
  const request=++artworkRequest;
  const body=artworkDialog.querySelector('#artwork-dialog-body');body.replaceChildren();
  artworkDialog.querySelector('#artwork-dialog-label').textContent=entry.type==='music'?'ODDLY. / ALBUM DETAILS':'ODDLY. / PHOTO VIEW';
+ // Open immediately: MusicBrainz requests can take time and must not block the dialog.
+ if(!artworkDialog.open)artworkDialog.showModal();
  if(entry.image){const img=document.createElement('img');img.className='artwork-full';img.alt=entry.type==='music'?entry.album:(entry.type==='eats'?entry.food:entry.momentTitle)||'사진';img.src=entry.image;body.append(img);}
  else if(entry.type!=='music'){addPreviewText(body,'p','artwork-note','이 기록에는 사진이 없어요.');}
  if(entry.type==='music'){
@@ -166,5 +168,4 @@ async function openArtworkPreview(entry){
    }catch(err){if(request===artworkRequest)status.remove();}
   }
  }
- artworkDialog.showModal();
 }
