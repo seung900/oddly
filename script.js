@@ -4,12 +4,13 @@ const $=selector=>document.querySelector(selector);
 const editor=$('#editor'),form=$('#entry-form'),type=$('#type'),photo=$('#photo');
 let entries=[];
 let searchedCover='';
+let selectedAlbumMeta=null;
 try{const stored=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(stored))entries=stored;}catch(e){console.warn('저장 데이터 읽기 실패',e)}
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(entries));if(window.archiveCloud)window.archiveCloud.queueSave();return true;}catch(e){alert('브라우저 저장 공간이 부족해요. 사진을 줄이거나 BACKUP으로 기록을 먼저 보관해주세요.');return false;}}
 function switchType(){const t=type.value;$('#music-search-panel').hidden=t!=='music';['music','eats','moments'].forEach(x=>{$(`#${x}-fields`).hidden=x!==t});$('#rating-label').hidden=t==='moments';$('#form-title').textContent=({music:'Add an album.',eats:'Add a meal.',moments:'Keep a moment.'})[t];}
-function openEditor(t='music'){searchedCover='';$('#search-results').innerHTML='';$('#search-status').textContent='';form.reset();$('#visibility').value='private';$('#form-error').textContent='';$('#image-preview').innerHTML='';type.value=t;$('#rating-value').textContent='4.0 / 5';switchType();editor.showModal();}
+function openEditor(t='music'){searchedCover='';selectedAlbumMeta=null;$('#search-results').innerHTML='';$('#search-status').textContent='';form.reset();$('#visibility').value='private';$('#form-error').textContent='';$('#image-preview').innerHTML='';type.value=t;$('#rating-value').textContent='4.0 / 5';switchType();editor.showModal();}
 $('#add').addEventListener('click',()=>openEditor('music'));
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.add)));
 $('#close').addEventListener('click',()=>editor.close());
@@ -18,8 +19,8 @@ type.addEventListener('change',switchType);
 $('#rating').addEventListener('input',e=>$('#rating-value').textContent=`${Number(e.target.value).toFixed(1)} / 5`);
 photo.addEventListener('change',()=>{const f=photo.files[0];$('#image-preview').innerHTML='';if(f){const img=document.createElement('img');img.src=URL.createObjectURL(f);img.onload=()=>URL.revokeObjectURL(img.src);$('#image-preview').append(img);}});
 function imageData(file){return new Promise((resolve,reject)=>{if(!file)return resolve('');if(!file.type.startsWith('image/'))return reject(new Error('이미지 파일을 선택해 주세요.'));if(file.size>10*1024*1024)return reject(new Error('사진은 10MB 이하로 선택해 주세요.'));const reader=new FileReader();reader.onerror=()=>reject(new Error('사진을 읽을 수 없어요.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('이미지를 열 수 없어요.'));img.onload=()=>{const scale=Math.min(1,1100/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.75));};img.src=reader.result;};reader.readAsDataURL(file);});}
-form.addEventListener('submit',async e=>{e.preventDefault();const data=new FormData(form),t=type.value;const album=String(data.get('album')||'').trim(),artist=String(data.get('artist')||'').trim(),food=String(data.get('food')||'').trim(),momentTitle=String(data.get('momentTitle')||'').trim();if(t==='music'&&(!album||!artist)){ $('#form-error').textContent='앨범명과 아티스트를 입력해 주세요.';return;}if(t==='eats'&&!food){$('#form-error').textContent='음식 이름을 입력해 주세요.';return;}if(t==='moments'&&!photo.files[0]&&!momentTitle){$('#form-error').textContent='사진이나 제목을 입력해 주세요.';return;}const saveBtn=$('.save');saveBtn.disabled=true;saveBtn.textContent='SAVING...';try{const image=photo.files[0]?await imageData(photo.files[0]):(t==='music'?searchedCover:'');const entry={id:uid(),type:t,visibility:String(data.get('visibility'))==='public'?'public':'private',image,album,artist,food,restaurant:String(data.get('restaurant')||'').trim(),location:String(data.get('location')||'').trim(),momentTitle,format:String(data.get('format')||'DIGITAL'),rating:Number(data.get('rating')||4),comment:String(data.get('comment')||'').trim(),tracks:String(data.get('tracks')||'').split('\n').map(s=>s.trim()).filter(Boolean).map(name=>({name,liked:false})),created:Date.now()};entries.unshift(entry);if(!persist()){entries.shift();return;}editor.close();render();}catch(err){$('#form-error').textContent=err.message||'저장에 실패했어요.';}finally{saveBtn.disabled=false;saveBtn.textContent='SAVE TO ODDLY ↗';}});
-function render(){for(const t of ['music','eats','moments']){const grid=$(`#${t}-grid`);grid.innerHTML='';const filtered=entries.filter(x=>x.type===t);if(!filtered.length){grid.innerHTML='<div class="empty">아직 기록이 없어요. 첫 번째 이야기를 남겨보세요 ↗</div>';continue;}for(const e of filtered){const card=document.createElement('article');card.className='entry';const title=t==='music'?e.album:t==='eats'?e.food:e.momentTitle||'Untitled moment';const subtitle=t==='music'?e.artist:t==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):new Date(e.created||Date.now()).toLocaleDateString('ko-KR');const art=e.image?`<img src="${escapeHTML(e.image)}" alt="${escapeHTML(title)}">`:`<span class="placeholder">${t==='music'?'♪':t==='eats'?'✳':'◌'}</span>`;card.innerHTML=`<div class="art">${art}</div><h3>${escapeHTML(title)}</h3><div class="sub">${escapeHTML(subtitle)}</div>${t==='music'?`<span class="format">${escapeHTML(e.format||'DIGITAL')}</span>`:''}${t!=='moments'?`<div class="score">★ ${Number(e.rating||0).toFixed(1)} / 5</div>`:''}${e.comment?`<p class="comment">${escapeHTML(e.comment)}</p>`:''}<div class="privacy-row"><span>${e.visibility==='public'?'🌐 회원 공개':'🔒 비공개'}</span><button type="button" class="privacy-toggle">${e.visibility==='public'?'비공개로 변경':'공개로 변경'}</button></div>${t==='music'&&Array.isArray(e.tracks)&&e.tracks.length?`<div class="tracks">${e.tracks.map((track,i)=>`<div class="track"><span>${escapeHTML(track.name)}</span><button type="button" class="heart ${track.liked?'liked':''}" data-track="${i}" aria-label="${track.liked?'좋아요 취소':'좋아요'}" aria-pressed="${!!track.liked}">${track.liked?'♥':'♡'}</button></div>`).join('')}</div>`:''}<button class="edit-entry" type="button">EDIT RECORD ↗</button><button class="delete" type="button">DELETE ENTRY ×</button>`;card.querySelector('.edit-entry').addEventListener('click',()=>openPersonalEdit(e));card.querySelector('.privacy-toggle').addEventListener('click',()=>{if(!window.archiveCloud?.isSignedIn()){alert('공개 설정을 변경하려면 먼저 로그인해 주세요.');return;}const old=e.visibility;e.visibility=old==='public'?'private':'public';if(!persist())e.visibility=old;render();});card.querySelector('.delete').addEventListener('click',()=>{if(confirm('이 기록을 삭제할까요?')){const old=entries;entries=entries.filter(x=>x.id!==e.id);if(!persist())entries=old;else if(window.archiveCloud)window.archiveCloud.removeEntry(e.id);render();}});card.querySelectorAll('[data-track]').forEach(b=>b.addEventListener('click',()=>{const track=e.tracks[Number(b.dataset.track)];track.liked=!track.liked;if(!persist())track.liked=!track.liked;render();}));grid.append(card);}}}
+form.addEventListener('submit',async e=>{e.preventDefault();const data=new FormData(form),t=type.value;const album=String(data.get('album')||'').trim(),artist=String(data.get('artist')||'').trim(),food=String(data.get('food')||'').trim(),momentTitle=String(data.get('momentTitle')||'').trim();if(t==='music'&&(!album||!artist)){ $('#form-error').textContent='앨범명과 아티스트를 입력해 주세요.';return;}if(t==='eats'&&!food){$('#form-error').textContent='음식 이름을 입력해 주세요.';return;}if(t==='moments'&&!photo.files[0]&&!momentTitle){$('#form-error').textContent='사진이나 제목을 입력해 주세요.';return;}const saveBtn=$('.save');saveBtn.disabled=true;saveBtn.textContent='SAVING...';try{const image=photo.files[0]?await imageData(photo.files[0]):(t==='music'?searchedCover:'');const entry={id:uid(),type:t,albumMeta:t==='music'&&selectedAlbumMeta&&selectedAlbumMeta.title===album&&selectedAlbumMeta.artist===artist?selectedAlbumMeta:null,visibility:String(data.get('visibility'))==='public'?'public':'private',image,album,artist,food,restaurant:String(data.get('restaurant')||'').trim(),location:String(data.get('location')||'').trim(),momentTitle,format:String(data.get('format')||'DIGITAL'),rating:Number(data.get('rating')||4),comment:String(data.get('comment')||'').trim(),tracks:String(data.get('tracks')||'').split('\n').map(s=>s.trim()).filter(Boolean).map(name=>({name,liked:false})),created:Date.now()};entries.unshift(entry);if(!persist()){entries.shift();return;}editor.close();render();}catch(err){$('#form-error').textContent=err.message||'저장에 실패했어요.';}finally{saveBtn.disabled=false;saveBtn.textContent='SAVE TO ODDLY ↗';}});
+function render(){for(const t of ['music','eats','moments']){const grid=$(`#${t}-grid`);grid.innerHTML='';const filtered=entries.filter(x=>x.type===t);if(!filtered.length){grid.innerHTML='<div class="empty">아직 기록이 없어요. 첫 번째 이야기를 남겨보세요 ↗</div>';continue;}for(const e of filtered){const card=document.createElement('article');card.className='entry';const title=t==='music'?e.album:t==='eats'?e.food:e.momentTitle||'Untitled moment';const subtitle=t==='music'?e.artist:t==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):new Date(e.created||Date.now()).toLocaleDateString('ko-KR');const art=e.image?`<img src="${escapeHTML(e.image)}" alt="${escapeHTML(title)}">`:`<span class="placeholder">${t==='music'?'♪':t==='eats'?'✳':'◌'}</span>`;card.innerHTML=`<div class="art">${art}</div><h3>${escapeHTML(title)}</h3><div class="sub">${escapeHTML(subtitle)}</div>${t==='music'?`<span class="format">${escapeHTML(e.format||'DIGITAL')}</span>`:''}${t!=='moments'?`<div class="score">★ ${Number(e.rating||0).toFixed(1)} / 5</div>`:''}${e.comment?`<p class="comment">${escapeHTML(e.comment)}</p>`:''}<div class="privacy-row"><span>${e.visibility==='public'?'🌐 회원 공개':'🔒 비공개'}</span><button type="button" class="privacy-toggle">${e.visibility==='public'?'비공개로 변경':'공개로 변경'}</button></div>${t==='music'&&Array.isArray(e.tracks)&&e.tracks.length?`<div class="tracks">${e.tracks.map((track,i)=>`<div class="track"><span>${escapeHTML(track.name)}</span><button type="button" class="heart ${track.liked?'liked':''}" data-track="${i}" aria-label="${track.liked?'좋아요 취소':'좋아요'}" aria-pressed="${!!track.liked}">${track.liked?'♥':'♡'}</button></div>`).join('')}</div>`:''}<button class="edit-entry" type="button">EDIT RECORD ↗</button><button class="delete" type="button">DELETE ENTRY ×</button>`;attachArtworkPreview(card.querySelector('.art'),e);card.querySelector('.edit-entry').addEventListener('click',()=>openPersonalEdit(e));card.querySelector('.privacy-toggle').addEventListener('click',()=>{if(!window.archiveCloud?.isSignedIn()){alert('공개 설정을 변경하려면 먼저 로그인해 주세요.');return;}const old=e.visibility;e.visibility=old==='public'?'private':'public';if(!persist())e.visibility=old;render();});card.querySelector('.delete').addEventListener('click',()=>{if(confirm('이 기록을 삭제할까요?')){const old=entries;entries=entries.filter(x=>x.id!==e.id);if(!persist())entries=old;else if(window.archiveCloud)window.archiveCloud.removeEntry(e.id);render();}});card.querySelectorAll('[data-track]').forEach(b=>b.addEventListener('click',()=>{const track=e.tracks[Number(b.dataset.track)];track.liked=!track.liked;if(!persist())track.liked=!track.liked;render();}));grid.append(card);}}}
 
 // Edit only personal notes. Preserve the record id, artwork, metadata, track list and likes.
 const personalEditDialog=document.createElement('dialog');
@@ -90,6 +91,7 @@ async function runAlbumSearch(){
 async function selectAlbum(g){
  const status=$('#search-status');status.textContent='트랙 목록 불러오는 중...';
  form.elements.album.value=g.title;form.elements.artist.value=artistName(g);
+ selectedAlbumMeta={id:g.id,title:g.title,artist:artistName(g),year:(g['first-release-date']||'').slice(0,4),description:g.disambiguation||''};
  searchedCover=''; 
  try{
   const releases=await mbFetch(`https://musicbrainz.org/ws/2/release/?release-group=${encodeURIComponent(g.id)}&fmt=json&limit=25`);
@@ -118,3 +120,51 @@ searchButton.addEventListener('click',runAlbumSearch);
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runAlbumSearch();}});
 
 switchType();render();
+
+// Artwork previews shared by personal records and DISCOVER. Never modify saved entries.
+const artworkDialog=document.createElement('dialog');
+artworkDialog.id='artwork-dialog';
+artworkDialog.setAttribute('aria-label','기록 자세히 보기');
+artworkDialog.innerHTML='<div class="artwork-dialog-head"><span id="artwork-dialog-label">ODDLY. / VIEW</span><button type="button" id="artwork-dialog-close" aria-label="닫기">✕</button></div><div id="artwork-dialog-body"></div>';
+document.body.append(artworkDialog);
+artworkDialog.querySelector('#artwork-dialog-close').addEventListener('click',()=>artworkDialog.close());
+artworkDialog.addEventListener('click',ev=>{if(ev.target===artworkDialog)artworkDialog.close();});
+let artworkRequest=0;
+function attachArtworkPreview(art,entry){
+ if(!art)return;
+ const button=document.createElement('button');button.type='button';button.className='artwork-trigger';
+ button.setAttribute('aria-label',entry.type==='music'?'앨범 상세 정보 보기':'사진 크게 보기');
+ button.title=entry.type==='music'?'앨범 상세 정보':'원본 비율로 사진 보기';
+ art.append(button);
+ button.addEventListener('click',()=>openArtworkPreview(entry));
+}
+function addPreviewText(parent,tag,cls,value){if(!value)return;const el=document.createElement(tag);el.className=cls;el.textContent=value;parent.append(el);}
+async function openArtworkPreview(entry){
+ const request=++artworkRequest;
+ const body=artworkDialog.querySelector('#artwork-dialog-body');body.replaceChildren();
+ artworkDialog.querySelector('#artwork-dialog-label').textContent=entry.type==='music'?'ODDLY. / ALBUM DETAILS':'ODDLY. / PHOTO VIEW';
+ if(entry.image){const img=document.createElement('img');img.className='artwork-full';img.alt=entry.type==='music'?entry.album:(entry.type==='eats'?entry.food:entry.momentTitle)||'사진';img.src=entry.image;body.append(img);}
+ else if(entry.type!=='music'){addPreviewText(body,'p','artwork-note','이 기록에는 사진이 없어요.');}
+ if(entry.type==='music'){
+  addPreviewText(body,'h3','artwork-album-title',entry.album||'Untitled');
+  addPreviewText(body,'p','artwork-album-artist',entry.artist||'');
+  const meta=document.createElement('div');meta.className='artwork-metadata';body.append(meta);
+  const cached=entry.albumMeta;
+  if(cached?.year)addPreviewText(meta,'p','artwork-year',`RELEASED · ${cached.year}`);
+  if(cached?.description)addPreviewText(meta,'p','artwork-description',cached.description);
+  if(!cached?.year&&!cached?.description){
+   const status=document.createElement('p');status.className='artwork-note';status.textContent='앨범 정보 확인 중…';meta.append(status);
+   try{
+    const q=`releasegroup:${JSON.stringify(entry.album||'')} AND artist:${JSON.stringify(entry.artist||'')}`;
+    const data=await mbFetch(`https://musicbrainz.org/ws/2/release-group/?query=${encodeURIComponent(q)}&fmt=json&limit=5`);
+    if(request!==artworkRequest||!artworkDialog.open)return;
+    status.remove();
+    const match=(data['release-groups']||[]).find(g=>g.title?.toLowerCase()===(entry.album||'').toLowerCase()&&artistName(g).toLowerCase()===(entry.artist||'').toLowerCase());
+    const year=(match?.['first-release-date']||'').slice(0,4);
+    if(year)addPreviewText(meta,'p','artwork-year',`RELEASED · ${year}`);
+    if(match?.disambiguation)addPreviewText(meta,'p','artwork-description',match.disambiguation);
+   }catch(err){if(request===artworkRequest)status.remove();}
+  }
+ }
+ artworkDialog.showModal();
+}

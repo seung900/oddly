@@ -154,7 +154,7 @@ async function openPerson(person){
  catch(err){profileText('#discover-status','공개 기록은 보이지만 좋아요를 불러오지 못했어요: '+(err.message||err));likeMap=new Map();}
  for(const row of data){const e=row.entry_data;if(!e||!['music','eats','moments'].includes(e.type))continue;
   const card=document.createElement('article');card.className='entry';const art=document.createElement('div');art.className='art';
-  if(typeof e.image==='string'&&e.image.startsWith('data:image/')){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent='♪';art.append(mark);}card.append(art);
+  if(typeof e.image==='string'&&e.image.startsWith('data:image/')){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent='♪';art.append(mark);}card.append(art);if(typeof attachArtworkPreview==='function')attachArtworkPreview(art,e);
   const title=document.createElement('h3');title.textContent=e.type==='music'?e.album:e.type==='eats'?e.food:e.momentTitle||'Untitled moment';card.append(title);
   const sub=document.createElement('div');sub.className='sub';sub.textContent=e.type==='music'?e.artist:e.type==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):'MOMENTS';card.append(sub);
   if(e.type!=='moments'){const score=document.createElement('div');score.className='score';score.textContent=`★ ${Number(e.rating||0).toFixed(1)} / 5`;card.append(score);}

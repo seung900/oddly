@@ -193,3 +193,21 @@ dialog{background:#fcfcfa;border-color:#333}
  #moments-grid .entry h3{font-size:14px;margin-top:16px}
 }
 @media(prefers-reduced-motion:reduce){#moments-grid .entry{transition:none}}
+
+/* ODDLY artwork viewer — keep the existing monochrome cards intact */
+.entry .art{position:relative}
+.artwork-trigger{position:absolute;inset:0;z-index:5;display:block;width:100%;height:100%;background:transparent;border:0;cursor:zoom-in;padding:0}
+.artwork-trigger:focus-visible{outline:3px solid #222;outline-offset:-3px}
+#artwork-dialog{width:min(760px,calc(100vw - 24px));max-height:94dvh;padding:clamp(16px,3vw,30px);border:1px solid #333;background:#fcfcfa;color:#222;box-shadow:0 22px 80px #0006}
+#artwork-dialog::backdrop{background:#080808c9}
+.artwork-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px;font-size:10px;letter-spacing:1.7px}
+.artwork-dialog-head button{background:none;border:0;color:inherit;font-size:24px;cursor:pointer;padding:5px 10px}
+#artwork-dialog-body{display:flex;flex-direction:column;align-items:center;gap:12px}
+.artwork-full{display:block;width:auto;height:auto;max-width:100%;max-height:min(70dvh,850px);object-fit:contain;box-shadow:0 2px 18px #0002}
+.artwork-album-title{font-size:clamp(24px,5vw,38px)!important;font-weight:400;text-align:center;margin:8px 0 0!important;letter-spacing:-.04em}
+.artwork-album-artist{text-align:center;margin:0;color:#666;font-size:14px}
+.artwork-metadata{text-align:center;max-width:520px}
+.artwork-year{font-size:11px;letter-spacing:1.5px;color:#555}
+.artwork-description{font-size:13px;line-height:1.7;color:#555}
+.artwork-note{font-size:12px;color:#777}
+@media(max-width:650px){#artwork-dialog{padding:15px}.artwork-full{max-height:65dvh}}
