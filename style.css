@@ -116,3 +116,12 @@ button:focus-visible,a:focus-visible{outline-color:var(--rust)}
 #public-entries .community-like:hover{background:#eee6d9}
 #public-entries .community-like.is-liked{color:#a1484e;border-color:#b99b97}
 #public-entries .community-like:disabled{opacity:.55;cursor:wait}
+
+/* Personal record editor */
+.edit-entry{border:1px solid var(--line);background:transparent;color:var(--olive,#565e45);padding:8px 11px;margin:8px 10px 8px 0;font-size:11px;letter-spacing:.04em}
+.edit-entry:hover{background:#e8e0d1}
+#personal-edit-form{display:flex;flex-direction:column;gap:18px}
+#personal-edit-form label{display:flex;flex-direction:column;gap:8px;font-size:12px}
+#personal-edit-form select,#personal-edit-form textarea{width:100%;border:1px solid var(--line);background:transparent;padding:12px;color:var(--ink)}
+#personal-edit-form input[type=range]{width:100%;accent-color:var(--olive,#565e45)}
+#personal-edit-error{color:#a43c38;font-size:12px;margin:0}
