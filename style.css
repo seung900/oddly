@@ -129,3 +129,67 @@ button:focus-visible,a:focus-visible{outline-color:var(--rust)}
 /* Compact edit action: keep the album shelf and text layout intact */
 .entry .edit-entry{display:inline-flex!important;align-items:center;justify-content:center;width:auto!important;max-width:max-content;min-width:0!important;min-height:0!important;flex:0 0 auto!important;align-self:flex-start!important;padding:5px 8px!important;margin:7px 8px 5px 0!important;font-size:10px!important;line-height:1.3!important;letter-spacing:0!important;border:1px solid var(--line);background:transparent;box-shadow:none;border-radius:2px;}
 .entry .edit-entry:hover{background:#e8e0d1;}
+
+
+/* ODDLY / MONOCHROME EDITORIAL — clean, aloof, photo-led */
+:root{--bg:#f4f4f1;--ink:#171717;--muted:#6f6f6b;--line:#cececa;--white:#fcfcfa;--olive:#272727;--rust:#454545}
+body{background:#f4f4f1;background-image:none;color:var(--ink)}
+header{background:rgba(244,244,241,.97);border-bottom:1px solid #222}
+.logo{font-family:'DM Sans',Arial,sans-serif;font-weight:700;letter-spacing:-1.8px}
+.logo span,.period,.hero h1 i{color:#171717}
+.hero:before{color:#888}.hero h1{font-family:'Libre Baskerville',Georgia,serif}
+.herofoot p,.entry .comment{color:#555}
+.indexline{background:#e9e9e5;border-color:#222;color:#555}
+.sectionhead{border-color:#222}
+.section h2{color:#171717}
+.entry .score,.entry .format{color:#444}
+.entry .format{border-color:#b9b9b5}
+.entry .art{background:#e3e3df}
+.person-card{background:#fafaf8;box-shadow:none;border-color:#c6c6c2}
+.person-card:hover{box-shadow:0 7px 18px #00000013}
+.end{background:#e8e8e4}
+dialog{background:#fcfcfa;border-color:#333}
+.save,.search-row button{background:#171717;border-color:#171717;color:#fff}
+.save:hover,.search-row button:hover{background:#444}
+#music-search-panel,.search-result{background:#fafaf8}
+#music-grid.album-grid{scrollbar-color:#777 transparent}
+#music-grid.album-grid:after{background:linear-gradient(#b5b5b1,#777 48%,#d0d0cc 55%,#92928d);box-shadow:0 7px 12px #0002}
+#music-grid .entry .art{background:#ddd;border-color:#f8f8f6;box-shadow:5px 4px 11px #0003,-1px 0 2px #0002}
+#music-grid .entry:hover .art{box-shadow:8px 12px 18px #0004}
+#music .sectionhead:after,#eats .sectionhead:after,#moments .sectionhead:after{color:#777}
+
+/* EATS: squared-off editorial food features, no scrapbook tilt */
+#eats-grid.food-grid{gap:44px 30px;align-items:start}
+#eats-grid .entry,#eats-grid .entry:nth-child(3n+2),#eats-grid .entry:nth-child(3n+3){transform:none;background:transparent;border:0;border-top:1px solid #222;box-shadow:none;padding:10px 0 0;transition:none}
+#eats-grid .entry:hover,#eats-grid .entry:focus-within{transform:none;box-shadow:none}
+#eats-grid .entry .art{aspect-ratio:3/2;background:#dededb;overflow:hidden}
+#eats-grid .entry .art img{filter:none}
+#eats-grid .entry h3{font-family:'DM Sans',Arial,sans-serif;font-size:19px;font-weight:600;letter-spacing:-.045em;margin:17px 0 7px}
+#eats-grid .entry .sub{border:0;padding:0;margin-bottom:12px;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.035em}
+#eats-grid .entry .comment{font-size:13px;line-height:1.75}
+#eats-grid .entry .score{font-family:'DM Mono',monospace;font-size:11px}
+
+/* MOMENTS: actual instant-film silhouette with generous caption space */
+#moments-grid.moment-grid{gap:48px 35px;align-items:start}
+#moments-grid .entry,#moments-grid .entry:nth-child(4n+2),#moments-grid .entry:nth-child(4n+3){background:#fff;border:1px solid #e2e2df;padding:13px 13px 33px;box-shadow:2px 8px 22px #00000019;transform:rotate(-1.2deg);transition:transform .25s ease,box-shadow .25s ease}
+#moments-grid .entry:nth-child(4n+2){transform:rotate(1.5deg)}
+#moments-grid .entry:nth-child(4n+3){transform:rotate(-.4deg)}
+#moments-grid .entry:nth-child(4n+4){transform:rotate(1deg)}
+#moments-grid .entry:hover,#moments-grid .entry:focus-within{transform:translateY(-5px) rotate(0);box-shadow:3px 13px 26px #0003}
+#moments-grid .entry .art{aspect-ratio:1/1;background:#e5e5e2}
+#moments-grid .entry .art img{filter:none}
+#moments-grid .entry h3{font-family:'Libre Baskerville',Georgia,serif;font-size:16px;font-weight:400;margin:22px 5px 7px}
+#moments-grid .entry .sub{font-family:'DM Mono',monospace;color:#777;font-size:10px;margin-left:5px;margin-right:5px}
+#moments-grid .entry .comment{margin:8px 5px;color:#444;font-size:12px;line-height:1.7}
+#moments-grid .entry .score,#moments-grid .entry .format{margin-left:5px;margin-right:5px}
+#moments-grid .entry .edit-entry{margin-left:5px!important}
+#public-entries .community-like:hover,.entry .edit-entry:hover{background:#e7e7e4}
+#public-entries .community-like.is-liked{color:#222;border-color:#777}
+@media(max-width:650px){
+ #eats-grid.food-grid,#moments-grid.moment-grid{gap:30px 15px}
+ #eats-grid .entry{padding:8px 0 0}
+ #eats-grid .entry h3{font-size:15px}
+ #moments-grid .entry{padding:7px 7px 23px}
+ #moments-grid .entry h3{font-size:14px;margin-top:16px}
+}
+@media(prefers-reduced-motion:reduce){#moments-grid .entry{transition:none}}
