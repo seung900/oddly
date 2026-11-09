@@ -17,3 +17,59 @@ header{flex-wrap:wrap}#auth-open{margin-left:auto}#auth-dialog{width:min(500px,c
 
 /* Community */
 .people-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.person-card{text-align:left;border:1px solid var(--line);background:var(--white);padding:24px;min-height:115px;display:flex;flex-direction:column;gap:12px}.person-card strong{font-size:19px;font-weight:500}.person-card small{color:var(--muted);line-height:1.6}.privacy-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;font-size:11px;color:var(--muted)}.privacy-toggle{border:1px solid var(--line);background:transparent;padding:7px 9px;font-size:11px}#discover-status{color:var(--muted);font-size:12px;margin-bottom:20px}#public-profile-title{font-size:35px;font-weight:400}#public-profile-bio{color:var(--muted);white-space:pre-wrap}#public-entries{margin-top:30px}#profile-dialog label{display:block;font-size:12px;margin:15px 0}#profile-dialog input,#profile-dialog textarea{display:block;width:100%;margin-top:8px;padding:12px;border:1px solid var(--line);background:transparent}#profile-dialog .save{width:100%}#profile-status{font-size:12px;color:var(--muted)}
+
+
+/* ODDLY / ANALOG EDITORIAL — 2026 visual refresh (presentation only) */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+:root{--bg:#f3efe5;--ink:#302d27;--muted:#777162;--line:#d1c8b8;--white:#faf7ef;--olive:#59624b;--rust:#9c5943}
+body{background:var(--bg);background-image:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(79,66,44,.012) 4px);}
+header{background:rgba(243,239,229,.97);border-bottom:1px solid #bdb3a2;position:relative;z-index:4}
+.logo{font-family:'Libre Baskerville',Georgia,serif;font-weight:700;letter-spacing:-1.9px;font-size:27px;text-transform:lowercase}
+.logo span,.period{color:var(--rust)}
+nav,.kicker,.indexline,.sectionhead .textbutton,.herofoot span,.format,footer,.outline,.footerbtn{font-family:'DM Mono',monospace}
+nav{gap:24px;letter-spacing:.9px}
+.outline,.footerbtn,.textbutton{transition:background .2s,color .2s,transform .2s}
+.outline:hover,.footerbtn:hover{background:var(--ink);color:var(--white)}
+.hero{position:relative;min-height:60vh;padding-top:110px;padding-bottom:90px;overflow:hidden}
+.hero:before{content:'VOL. 001   /   A JOURNAL OF TASTE';position:absolute;top:33px;right:max(5vw,25px);font:10px 'DM Mono',monospace;letter-spacing:1px;color:#9b8f7e}
+.hero h1{font-family:'Libre Baskerville',Georgia,serif;font-size:clamp(42px,6.8vw,106px);font-weight:400;letter-spacing:-.065em;line-height:1.23;max-width:1100px;margin:45px 0 65px}
+.hero h1 i{font-style:italic;color:var(--olive)}
+.herofoot{border-top:1px solid var(--line);padding-top:24px}
+.herofoot p{color:#625d52}
+.indexline{background:#e9e2d5;border-top:1px solid #b9af9e;border-bottom:1px solid #b9af9e}
+.section{padding-top:96px;padding-bottom:112px}
+.section h2{font-family:'Libre Baskerville',Georgia,serif;letter-spacing:-.07em;font-size:clamp(49px,6vw,86px)}
+.sectionhead{border-bottom:1px solid var(--line);padding-bottom:26px}
+.sectionhead p{margin:0}
+.entry .art{background:#d9d1c1}
+.entry .art img{transition:transform .35s ease}
+.entry:hover .art img{transform:scale(1.035)}
+.entry h3{font-family:'Libre Baskerville',Georgia,serif;font-size:17px;line-height:1.45;letter-spacing:-.025em}
+.entry .sub{font-family:'DM Mono',monospace;font-size:11px}
+.entry .score{color:var(--rust)}
+.entry .format{border-color:#b9af9e;color:var(--olive)}
+.person-card{background:#f9f5ec;box-shadow:3px 4px 0 #e4dbcb;transition:transform .2s,box-shadow .2s}
+.person-card:hover{transform:translateY(-3px);box-shadow:4px 7px 0 #d9cfbe}
+.person-card strong{font-family:'Libre Baskerville',Georgia,serif}
+.end{background:#eae4d8}.end p{font-family:'Libre Baskerville',Georgia,serif}
+dialog{background:#faf7ef;border-color:#8d8476}
+.save,.search-row button{background:var(--olive);border-color:var(--olive)}
+button:focus-visible,a:focus-visible{outline-color:var(--rust)}
+
+/* Record-store shelf: covers overlap, metadata remains readable. */
+#music-grid.album-grid{display:flex;align-items:stretch;gap:0;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding-left:16px;padding:20px 34px 34px 6px;position:relative;isolation:isolate;scrollbar-color:#aa9d89 transparent;scrollbar-width:thin}
+#music-grid.album-grid:after{content:'';position:absolute;left:0;right:0;top:226px;height:9px;background:linear-gradient(#a7957d,#75644f 48%,#c0ae95 55%,#9c886d);box-shadow:0 7px 12px #554b3c33;z-index:0;pointer-events:none}
+#music-grid .entry{flex:0 0 210px;width:210px;margin-left:-24px;scroll-snap-align:start;z-index:1;transition:transform .22s ease,filter .22s ease}
+#music-grid .entry:first-child{margin-left:0}
+#music-grid .entry:hover,#music-grid .entry:focus-within{z-index:3;transform:translateY(-10px)}
+#music-grid .entry .art{aspect-ratio:1;background:#d5cbb9;border:5px solid #f9f6ed;box-shadow:5px 4px 11px #3e352b42,-1px 0 2px #6d5f4a33;position:relative;z-index:2;transform:rotate(-1deg)}
+#music-grid .entry:nth-child(3n+2) .art{transform:rotate(1.2deg)}
+#music-grid .entry:nth-child(4n+3) .art{transform:rotate(-.5deg)}
+#music-grid .entry:hover .art{box-shadow:8px 12px 18px #3e352b55}
+#music-grid .entry h3{margin-top:28px}
+#music-grid .entry .tracks{max-height:175px;overflow-y:auto}
+#music-grid .empty{flex:1 0 100%;margin:0}
+#music .sectionhead:after{content:'↔  SLIDE THROUGH THE SHELF';font:10px 'DM Mono',monospace;letter-spacing:1px;color:var(--olive);align-self:end}
+@media(max-width:800px){#music .sectionhead:after{display:none}}
+@media(max-width:650px){.hero{padding-top:80px}.hero:before{top:22px;right:20px;font-size:8px}.hero h1{font-size:clamp(36px,9vw,62px);margin:45px 0 50px}.section{padding-top:70px;padding-bottom:75px}.section h2{font-size:53px}#music-grid.album-grid{padding-right:20px}#music-grid .entry{flex-basis:175px;width:175px;margin-left:-18px}#music-grid.album-grid:after{top:190px}#music-grid .entry h3{margin-top:25px;font-size:15px}nav{gap:10px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.entry .art img,#music-grid .entry,.person-card{transition:none}}
