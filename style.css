@@ -110,3 +110,9 @@ button:focus-visible,a:focus-visible{outline-color:var(--rust)}
 @media(max-width:800px){#eats .sectionhead:after,#moments .sectionhead:after{display:none}}
 @media(max-width:650px){#eats-grid.food-grid,#moments-grid.moment-grid{gap:18px 12px}#eats-grid .entry,#moments-grid .entry{padding:7px 7px 15px}#eats-grid .entry h3,#moments-grid .entry h3{font-size:14px}#eats-grid .entry .sub,#moments-grid .entry .sub{font-size:10px}}
 @media(prefers-reduced-motion:reduce){#eats-grid .entry,#moments-grid .entry{transition:none}}
+
+/* Community likes: distinct from the private track-list hearts */
+#public-entries .community-like{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:68px;margin:16px 0 5px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14px;transition:background .15s,border-color .15s}
+#public-entries .community-like:hover{background:#eee6d9}
+#public-entries .community-like.is-liked{color:#a1484e;border-color:#b99b97}
+#public-entries .community-like:disabled{opacity:.55;cursor:wait}

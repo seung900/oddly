@@ -102,6 +102,36 @@ document.querySelector('#profile-save').addEventListener('click',async()=>{
  const {error}=await cloudClient.from('archive_profiles').upsert({id:cloudUser.id,display_name:name,bio},{onConflict:'id'});
  profileText('#profile-status',error?'저장 실패: '+error.message:'프로필이 저장됐어요 ✓');
 });
+// Community likes are stored separately from personal track hearts.
+// Only signed-in members can like entries shared publicly.
+async function loadCommunityLikes(entryIds){
+ const result=new Map(entryIds.map(id=>[String(id),{count:0,mine:false}]));
+ if(!cloudUser||!entryIds.length)return result;
+ const {data,error}=await cloudClient.from('archive_likes').select('entry_id,user_id').in('entry_id',entryIds.map(String));
+ if(error)throw error;
+ for(const like of data||[]){const info=result.get(like.entry_id);if(info){info.count++;if(like.user_id===cloudUser.id)info.mine=true;}}
+ return result;
+}
+function makeCommunityLikeButton(entryId,info){
+ const btn=document.createElement('button');btn.type='button';btn.className='community-like';
+ function paint(){btn.textContent=`${info.mine?'♥':'♡'} ${info.count}`;btn.classList.toggle('is-liked',info.mine);btn.setAttribute('aria-pressed',String(info.mine));btn.setAttribute('aria-label',info.mine?'좋아요 취소':'좋아요');}
+ paint();
+ btn.addEventListener('click',async()=>{
+  if(!cloudUser)return;
+  const userId=cloudUser.id,wasLiked=info.mine;
+  btn.disabled=true;
+  try{
+   const query=cloudClient.from('archive_likes');
+   const {error}=wasLiked
+    ?await query.delete().eq('entry_id',String(entryId)).eq('user_id',userId)
+    :await query.insert({entry_id:String(entryId),user_id:userId});
+   if(error)throw error;
+   info.mine=!wasLiked;info.count=Math.max(0,info.count+(wasLiked?-1:1));paint();
+  }catch(err){alert('좋아요 저장 실패: '+(err.message||err));}
+  finally{btn.disabled=false;}
+ });
+ return btn;
+}
 const peopleList=document.querySelector('#people-list');
 async function loadPeople(){
  clearDiscovery();if(!cloudUser){profileText('#discover-status','로그인 후 이용할 수 있어요.');return;}
@@ -119,6 +149,9 @@ async function openPerson(person){
  if(error){profileText('#discover-status','기록을 불러오지 못했어요: '+error.message);return;}
  profileText('#discover-status',`${data?.length||0}개의 공개 기록`);
  if(!data?.length){grid.textContent='아직 공개한 기록이 없어요.';return;}
+ let likeMap;
+ try{likeMap=await loadCommunityLikes(data.map(r=>r.entry_data?.id).filter(id=>typeof id==='string'));}
+ catch(err){profileText('#discover-status','공개 기록은 보이지만 좋아요를 불러오지 못했어요: '+(err.message||err));likeMap=new Map();}
  for(const row of data){const e=row.entry_data;if(!e||!['music','eats','moments'].includes(e.type))continue;
   const card=document.createElement('article');card.className='entry';const art=document.createElement('div');art.className='art';
   if(typeof e.image==='string'&&e.image.startsWith('data:image/')){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent='♪';art.append(mark);}card.append(art);
@@ -127,6 +160,7 @@ async function openPerson(person){
   if(e.type!=='moments'){const score=document.createElement('div');score.className='score';score.textContent=`★ ${Number(e.rating||0).toFixed(1)} / 5`;card.append(score);}
   if(e.comment){const comment=document.createElement('p');comment.className='comment';comment.textContent=e.comment;card.append(comment);}
   if(e.type==='music'&&Array.isArray(e.tracks)){const tracks=document.createElement('div');tracks.className='tracks';for(const t of e.tracks){const line=document.createElement('div');line.className='track';line.textContent=(t.liked?'♥ ':'')+String(t.name||'');tracks.append(line);}card.append(tracks);}
+  if(typeof e.id==='string')card.append(makeCommunityLikeButton(e.id,likeMap.get(e.id)||{count:0,mine:false}));
   grid.append(card);
  }
 }
