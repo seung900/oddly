@@ -11,3 +11,6 @@
 .search-result img{width:44px;height:44px;object-fit:cover;flex:none;background:#e6e3dc}
 .search-result span{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .search-result small{display:block;color:var(--muted)}
+
+/* Sync login */
+header{flex-wrap:wrap}#auth-open{margin-left:auto}#auth-dialog{width:min(500px,calc(100vw - 28px))}#auth-dialog h3{font-size:30px}#auth-dialog label{display:flex;flex-direction:column;gap:8px;font-size:12px;margin:14px 0}#auth-dialog input{width:100%;border:1px solid var(--line);background:transparent;padding:12px;border-radius:0}#auth-dialog .auth-actions{display:flex;gap:8px;margin-top:20px}#auth-dialog .auth-actions button,#auth-sync-now,#auth-sign-out{border:1px solid var(--ink);padding:12px 16px;background:var(--ink);color:white;font-size:12px}#auth-dialog #auth-sign-up,#auth-sign-out{background:transparent;color:var(--ink)}#auth-status{white-space:pre-wrap;font-size:12px;line-height:1.7}#auth-dialog .auth-intro,#auth-dialog .auth-note{font-size:12px;color:var(--muted);line-height:1.8}@media(max-width:650px){#auth-open{order:2;margin-left:auto}header #add{order:2}nav{order:3}}

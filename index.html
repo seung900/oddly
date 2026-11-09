@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>SEUNGU — Archive</title>
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
     <header><a href="#top" class="logo">SEUNGU<span>.</span></a>
-        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="add"
+        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
             class="outline">+ NEW ENTRY</button>
     </header>
     <main id="top">
@@ -62,6 +62,19 @@
                 ↑</button><input id="restore-file" type="file" accept="application/json" hidden></div><a
             href="#top">BACK TO TOP ↑</a>
     </footer>
+    <dialog id="auth-dialog">
+      <div class="modalhead"><span>ARCHIVE CLOUD SYNC</span><button id="auth-close" type="button" aria-label="닫기">✕</button></div>
+      <h3>My archive, everywhere.</h3>
+      <p class="auth-intro">PC와 아이폰에서 같은 이메일 계정으로 로그인하면 기록이 동기화돼요. 최초 가입 시 이메일 인증이 필요할 수 있어요.</p>
+      <div id="auth-logged-out">
+        <label>이메일<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+        <label>비밀번호<input id="auth-password" type="password" autocomplete="current-password" placeholder="6자 이상"></label>
+        <div class="auth-actions"><button id="auth-sign-in" type="button">LOGIN</button><button id="auth-sign-up" type="button">SIGN UP</button></div>
+      </div>
+      <div id="auth-logged-in" hidden><p id="auth-user"></p><button id="auth-sync-now" type="button">SYNC NOW ↗</button><button id="auth-sign-out" type="button">LOG OUT</button></div>
+      <p id="auth-status" role="status"></p>
+      <p class="auth-note">기록은 이 계정의 클라우드에 저장돼요. 중요한 사진과 기록은 아래 BACKUP으로 별도 보관하는 걸 권장해요.</p>
+    </dialog>
     <dialog id="editor">
         <form id="entry-form">
             <div class="modalhead"><span>NEW ARCHIVE ENTRY</span><button type="button" id="close"
@@ -96,7 +109,9 @@
             <p id="form-error" role="alert"></p><button class="save" type="submit">SAVE TO ARCHIVE ↗</button>
         </form>
     </dialog>
-    <script src="script.js?v=2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="script.js?v=3"></script>
+    <script src="sync.js?v=3"></script>
 </body>
 
 </html>
