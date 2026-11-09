@@ -73,3 +73,11 @@ button:focus-visible,a:focus-visible{outline-color:var(--rust)}
 @media(max-width:800px){#music .sectionhead:after{display:none}}
 @media(max-width:650px){.hero{padding-top:80px}.hero:before{top:22px;right:20px;font-size:8px}.hero h1{font-size:clamp(36px,9vw,62px);margin:45px 0 50px}.section{padding-top:70px;padding-bottom:75px}.section h2{font-size:53px}#music-grid.album-grid{padding-right:20px}#music-grid .entry{flex-basis:175px;width:175px;margin-left:-18px}#music-grid.album-grid:after{top:190px}#music-grid .entry h3{margin-top:25px;font-size:15px}nav{gap:10px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.entry .art img,#music-grid .entry,.person-card{transition:none}}
+
+/* Keep overlapping album sleeves, but give each album's text its own lane. */
+#music-grid .entry > :not(.art){margin-right:32px;}
+#music-grid .entry .tracks{min-width:0;overflow-x:hidden;}
+#music-grid .entry .track{min-width:0;}
+#music-grid .entry .track span{min-width:0;overflow-wrap:anywhere;}
+#music-grid .entry .heart{flex-shrink:0;}
+@media(max-width:650px){#music-grid .entry > :not(.art){margin-right:26px;}}
