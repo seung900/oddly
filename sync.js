@@ -8,7 +8,31 @@ const cloudButton=document.querySelector('#auth-open');
 const ownerKey='seungu-archive-cloud-owner';
 let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
 function cloudMessage(msg){cloudStatus.textContent=msg;}
-function cloudLocalSave(){localStorage.setItem(KEY,JSON.stringify(entries));render();}
+function saveLocalCache(){
+ // Cloud is the authoritative copy for signed-in users. Avoid duplicating large
+ // legacy base64 photos in the browser's small localStorage quota.
+ try{localStorage.setItem(KEY,JSON.stringify(entries));return;}
+ catch(err){
+  if(!cloudUser)throw err;
+  const slim=entries.map(e=>({...e,image:typeof e.image==='string'&&e.image.startsWith('data:image/')?'':e.image}));
+  localStorage.setItem(KEY,JSON.stringify(slim));
+ }
+}
+function cloudLocalSave(){try{saveLocalCache();}catch(e){cloudMessage('LOCAL CACHE FULL — CLOUD RECORDS STILL AVAILABLE');}render();}
+async function cloudUploadImage(file){
+ if(!cloudUser||!cloudClient)throw Error('사진 업로드는 로그인 후 이용할 수 있어요.');
+ if(!file.type.startsWith('image/'))throw Error('이미지 파일을 선택해 주세요.');
+ if(file.size>10*1024*1024)throw Error('사진은 10MB 이하로 선택해 주세요.');
+ const userId=cloudUser.id;
+ // Convert on-device before upload to keep storage and bandwidth reasonable.
+ const base64=await imageData(file);
+ const response=await fetch(base64);
+ const blob=await response.blob();
+ const path=`${userId}/${crypto.randomUUID?crypto.randomUUID():Date.now()+ '-' + Math.random().toString(36).slice(2)}.jpg`;
+ const {error}=await cloudClient.storage.from('oddly-entry-images').upload(path,blob,{contentType:'image/jpeg',upsert:false});
+ if(error)throw Error('사진 업로드 실패: '+error.message);
+ return cloudClient.storage.from('oddly-entry-images').getPublicUrl(path).data.publicUrl;
+}
 function cloudUi(){
  document.querySelector('#auth-logged-out').hidden=!!cloudUser;
  document.querySelector('#auth-logged-in').hidden=!cloudUser;
@@ -63,7 +87,7 @@ function cloudRemoveEntry(id){
   if(error)throw error;
  }).catch(e=>cloudMessage('클라우드 삭제 실패: '+(e.message||e)));
 }
-window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser};
+window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser,uploadImage:cloudUploadImage};
 cloudButton.addEventListener('click',()=>cloudDialog.showModal());
 document.querySelector('#auth-close').addEventListener('click',()=>cloudDialog.close());
 async function cloudAuth(action){
