@@ -257,3 +257,118 @@ dialog,#artwork-dialog{background:#ffffff;color:#111111}
 #friend-eats-grid .entry .art img,#friend-moments-grid .entry .art img{height:auto;width:100%;object-fit:contain}
 .friend-empty{font:11px 'DM Mono',monospace;color:#777;letter-spacing:1px;padding:25px 0}
 @media(max-width:650px){.friend-archive-nav{gap:18px;margin:25px 0 40px}#friend-music-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.friend-archive-section{padding-bottom:45px}}
+
+/* Friend archive uses the same card and shelf rules as the owner archive. */
+#friend-music-grid.album-grid{display:flex;align-items:stretch;gap:0;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding-left:16px;padding:20px 34px 34px 6px;position:relative;isolation:isolate;scrollbar-color:#9e9e9e transparent;scrollbar-width:thin}
+#friend-music-grid.album-grid:after{content:'';position:absolute;left:0;right:0;top:226px;height:9px;background:linear-gradient(#979797,#666666 48%,#b0b0b0 55%,#8a8a8a);box-shadow:0 7px 12px #4c4c4c33;z-index:0;pointer-events:none}
+#friend-music-grid .entry{flex:0 0 210px;width:210px;margin-left:-24px;scroll-snap-align:start;z-index:1;transition:transform .22s ease,filter .22s ease}
+#friend-music-grid .entry:first-child{margin-left:0}
+#friend-music-grid .entry:hover,#friend-music-grid .entry:focus-within{z-index:3;transform:translateY(-10px)}
+#friend-music-grid .entry .art{aspect-ratio:1;background:#cccccc;border:5px solid #f6f6f6;box-shadow:5px 4px 11px #36363642,-1px 0 2px #60606033;position:relative;z-index:2;transform:rotate(-1deg)}
+#friend-music-grid .entry:nth-child(3n+2) .art{transform:rotate(1.2deg)}
+#friend-music-grid .entry:nth-child(4n+3) .art{transform:rotate(-.5deg)}
+#friend-music-grid .entry:hover .art{box-shadow:8px 12px 18px #36363655}
+#friend-music-grid .entry h3{margin-top:28px}
+#friend-music-grid .entry .tracks{max-height:175px;overflow-y:auto}
+#friend-music-grid .empty{flex:1 0 100%;margin:0}
+#friend-music-grid.album-grid{padding-right:20px}
+#friend-music-grid .entry{flex-basis:175px;width:175px;margin-left:-18px}
+#friend-music-grid.album-grid:after{top:190px}
+#friend-music-grid .entry h3{margin-top:25px;font-size:15px}
+.entry .art img,#friend-music-grid .entry,.person-card{transition:none}
+#friend-music-grid .entry > :not(.art){margin-right:32px;}
+#friend-music-grid .entry .tracks{min-width:0;overflow-x:hidden;}
+#friend-music-grid .entry .track{min-width:0;}
+#friend-music-grid .entry .track span{min-width:0;overflow-wrap:anywhere;}
+#friend-music-grid .entry .heart{flex-shrink:0;}
+#friend-music-grid .entry > :not(.art){margin-right:26px;}
+#friend-eats-grid.food-grid{gap:34px 26px;align-items:start}
+#friend-eats-grid .entry{background:#f7f7f7;padding:12px 12px 18px;border:1px solid #d6d6d6;box-shadow:3px 5px 0 #d7d7d7;transition:transform .2s ease,box-shadow .2s ease}
+#friend-eats-grid .entry:nth-child(3n+2){transform:rotate(.6deg)}
+#friend-eats-grid .entry:nth-child(3n+3){transform:rotate(-.6deg)}
+#friend-eats-grid .entry:hover,#friend-eats-grid .entry:focus-within{transform:translateY(-4px) rotate(0);box-shadow:5px 8px 0 #c9c9c9}
+#friend-eats-grid .entry .art{aspect-ratio:4/3;background:#d9d9d9;overflow:hidden}
+#friend-eats-grid .entry .art img{filter:saturate(.86) contrast(.98)}
+#friend-eats-grid .entry h3{margin-top:17px}
+#friend-eats-grid .entry .sub{border-bottom:1px solid #dadada;padding-bottom:10px}
+#friend-eats-grid .entry .comment{font-size:12px}
+#friend-moments-grid.moment-grid{gap:38px 28px;align-items:start}
+#friend-moments-grid .entry{background:#f8f8f8;border:1px solid #d4d4d4;padding:12px 12px 23px;box-shadow:0 6px 16px #3e3e3e16;transition:transform .22s ease,box-shadow .22s ease}
+#friend-moments-grid .entry:nth-child(4n+2){transform:rotate(1deg)}
+#friend-moments-grid .entry:nth-child(4n+3){transform:rotate(-.9deg)}
+#friend-moments-grid .entry:hover,#friend-moments-grid .entry:focus-within{transform:translateY(-4px) rotate(0);box-shadow:0 10px 22px #3e3e3e25}
+#friend-moments-grid .entry .art{aspect-ratio:4/3;background:#d5d5d5}
+#friend-moments-grid .entry .art img{filter:saturate(.88)}
+#friend-moments-grid .entry h3{font-size:16px;margin:19px 2px 5px}
+#friend-moments-grid .entry .sub,#friend-moments-grid .entry .comment,#friend-moments-grid .entry .score,#friend-moments-grid .entry .format{margin-left:2px;margin-right:2px}
+#friend-moments-grid .entry .sub{font-size:10px;letter-spacing:.4px}
+#friend-eats-grid.food-grid,#friend-moments-grid.moment-grid{gap:18px 12px}
+#friend-eats-grid .entry,#friend-moments-grid .entry{padding:7px 7px 15px}
+#friend-eats-grid .entry h3,#friend-moments-grid .entry h3{font-size:14px}
+#friend-eats-grid .entry .sub,#friend-moments-grid .entry .sub{font-size:10px}
+#friend-eats-grid .entry,#friend-moments-grid .entry{transition:none}
+#friend-music-grid.album-grid{scrollbar-color:#777777 transparent}
+#friend-music-grid.album-grid:after{background:linear-gradient(#b5b5b5,#777777 48%,#d0d0d0 55%,#929292);box-shadow:0 7px 12px #00000022}
+#friend-music-grid .entry .art{background:#dddddd;border-color:#f8f8f8;box-shadow:5px 4px 11px #00000033,-1px 0 2px #00000022}
+#friend-music-grid .entry:hover .art{box-shadow:8px 12px 18px #00000044}
+#friend-eats-grid.food-grid{gap:44px 30px;align-items:start}
+#friend-eats-grid .entry,#friend-eats-grid .entry:nth-child(3n+2),#friend-eats-grid .entry:nth-child(3n+3){transform:none;background:transparent;border:0;border-top:1px solid #222222;box-shadow:none;padding:10px 0 0;transition:none}
+#friend-eats-grid .entry:hover,#friend-eats-grid .entry:focus-within{transform:none;box-shadow:none}
+#friend-eats-grid .entry .art{aspect-ratio:3/2;background:#dedede;overflow:hidden}
+#friend-eats-grid .entry .art img{filter:none}
+#friend-eats-grid .entry h3{font-family:'DM Sans',Arial,sans-serif;font-size:19px;font-weight:600;letter-spacing:-.045em;margin:17px 0 7px}
+#friend-eats-grid .entry .sub{border:0;padding:0;margin-bottom:12px;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.035em}
+#friend-eats-grid .entry .comment{font-size:13px;line-height:1.75}
+#friend-eats-grid .entry .score{font-family:'DM Mono',monospace;font-size:11px}
+#friend-moments-grid.moment-grid{gap:48px 35px;align-items:start}
+#friend-moments-grid .entry,#friend-moments-grid .entry:nth-child(4n+2),#friend-moments-grid .entry:nth-child(4n+3){background:#ffffff;border:1px solid #e2e2e2;padding:13px 13px 33px;box-shadow:2px 8px 22px #00000019;transform:rotate(-1.2deg);transition:transform .25s ease,box-shadow .25s ease}
+#friend-moments-grid .entry:nth-child(4n+2){transform:rotate(1.5deg)}
+#friend-moments-grid .entry:nth-child(4n+3){transform:rotate(-.4deg)}
+#friend-moments-grid .entry:nth-child(4n+4){transform:rotate(1deg)}
+#friend-moments-grid .entry:hover,#friend-moments-grid .entry:focus-within{transform:translateY(-5px) rotate(0);box-shadow:3px 13px 26px #00000033}
+#friend-moments-grid .entry .art{aspect-ratio:1/1;background:#e5e5e5}
+#friend-moments-grid .entry .art img{filter:none}
+#friend-moments-grid .entry h3{font-family:'Libre Baskerville',Georgia,serif;font-size:16px;font-weight:400;margin:22px 5px 7px}
+#friend-moments-grid .entry .sub{font-family:'DM Mono',monospace;color:#777777;font-size:10px;margin-left:5px;margin-right:5px}
+#friend-moments-grid .entry .comment{margin:8px 5px;color:#444444;font-size:12px;line-height:1.7}
+#friend-moments-grid .entry .score,#friend-moments-grid .entry .format{margin-left:5px;margin-right:5px}
+#friend-moments-grid .entry .edit-entry{margin-left:5px!important}
+#friend-eats-grid.food-grid,#friend-moments-grid.moment-grid{gap:30px 15px}
+#friend-eats-grid .entry{padding:8px 0 0}
+#friend-eats-grid .entry h3{font-size:15px}
+#friend-moments-grid .entry{padding:7px 7px 23px}
+#friend-moments-grid .entry h3{font-size:14px;margin-top:16px}
+#friend-moments-grid .entry{transition:none}
+#friend-moments-grid .entry .art,#friend-eats-grid .entry .art{aspect-ratio:auto;height:auto;min-height:0;position:relative;overflow:hidden;display:block}
+#friend-moments-grid .entry .art img,#friend-eats-grid .entry .art img{display:block;width:100%;height:auto;object-fit:contain}
+#friend-moments-grid .entry .art:has(.placeholder),#friend-eats-grid .entry .art:has(.placeholder){aspect-ratio:3/2;display:flex;align-items:center;justify-content:center}
+#friend-music-grid .entry .art,#friend-eats-grid .entry,#friend-moments-grid .entry,.person-card{background-color:#ffffff}
+#friend-eats-grid .entry .art img,#friend-moments-grid .entry .art img,#friend-music-grid .entry .art img,.artwork-full,#public-entries .art img{filter:none!important;mix-blend-mode:normal!important}
+
+/* Equal layouts, with friend-only actions kept distinct. */
+#friend-music-grid.album-grid{display:flex;grid-template-columns:none;gap:0;overflow-x:auto;overflow-y:hidden;align-items:stretch;scroll-snap-type:x proximity;padding:20px 34px 34px 6px;position:relative;isolation:isolate}
+#friend-music-grid.album-grid .entry{flex:0 0 210px;width:210px;min-width:0;margin-left:-24px}
+#friend-music-grid.album-grid .entry:first-child{margin-left:0}
+#friend-music-grid.album-grid:after{content:'';position:absolute;left:0;right:0;top:226px;height:9px;background:linear-gradient(#b5b5b5,#777 48%,#d0d0d0 55%,#929292);box-shadow:0 7px 12px #0002;z-index:0;pointer-events:none}
+#friend-eats-grid.food-grid,#friend-moments-grid.moment-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));align-items:start}
+#friend-eats-grid .entry .art,#friend-moments-grid .entry .art{aspect-ratio:auto;height:auto;min-height:0;overflow:hidden;display:block}
+#friend-eats-grid .entry .art img,#friend-moments-grid .entry .art img{display:block;width:100%;height:auto;object-fit:contain;filter:none!important}
+#friend-eats-grid .entry .art:has(.placeholder),#friend-moments-grid .entry .art:has(.placeholder){aspect-ratio:3/2;display:flex;align-items:center;justify-content:center}
+#friend-music-grid .entry .art img{filter:none!important}
+#friend-music-grid .entry .tracks{max-height:175px;overflow-y:auto}
+#friend-music-grid .entry > :not(.art){margin-right:32px}
+#friend-music-grid .entry .track{display:flex;justify-content:space-between;gap:8px}
+#friend-music-grid .entry .track span{min-width:0;overflow-wrap:anywhere}
+#friend-music-grid .entry .track .heart{flex-shrink:0;pointer-events:none}
+#friend-music-grid .friend-empty{flex:1 0 100%}
+#friend-eats-grid .entry,#friend-moments-grid .entry{background:#fff}
+@media(max-width:650px){
+ #friend-music-grid.album-grid{grid-template-columns:none;padding-right:20px}
+ #friend-music-grid.album-grid .entry{flex-basis:175px;width:175px;margin-left:-18px}
+ #friend-music-grid.album-grid .entry:first-child{margin-left:0}
+ #friend-music-grid.album-grid:after{top:190px}
+ #friend-music-grid .entry > :not(.art){margin-right:26px}
+ #friend-eats-grid.food-grid,#friend-moments-grid.moment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Future customization can be attached to the profile without altering global styles. */
+#public-profile[data-profile-theme="default"]{color:inherit}

@@ -143,7 +143,7 @@ async function loadPeople(){
 }
 async function openPerson(person){
  if(!cloudUser)return;
- peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;
+ peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;document.querySelector('#public-profile').dataset.profileTheme='default';
  profileText('#public-profile-title',person.display_name);profileText('#public-profile-bio',person.bio||'');
  profileText('#discover-status','LOADING...');
  const grids=Object.fromEntries(['music','eats','moments'].map(t=>[t,document.querySelector(`#friend-${t}-grid`)]));
@@ -163,7 +163,7 @@ async function openPerson(person){
   if(e.type==='music'){const format=document.createElement('span');format.className='format';format.textContent=e.format||'DIGITAL';card.append(format);}
   if(e.type!=='moments'){const score=document.createElement('div');score.className='score';score.textContent=`★ ${Number(e.rating||0).toFixed(1)} / 5`;card.append(score);}
   if(e.comment){const comment=document.createElement('p');comment.className='comment';comment.textContent=e.comment;card.append(comment);}
-  if(e.type==='music'&&Array.isArray(e.tracks)&&e.tracks.length){const tracks=document.createElement('div');tracks.className='tracks';for(const t of e.tracks){const line=document.createElement('div');line.className='track';line.textContent=(t.liked?'♥ ':'')+String(t.name||'');tracks.append(line);}card.append(tracks);}
+  if(e.type==='music'&&Array.isArray(e.tracks)&&e.tracks.length){const tracks=document.createElement('div');tracks.className='tracks';for(const t of e.tracks){const line=document.createElement('div');line.className='track';const name=document.createElement('span');name.textContent=String(t.name||'');const heart=document.createElement('span');heart.className='heart'+(t.liked?' liked':'');heart.textContent=t.liked?'♥':'♡';line.append(name,heart);tracks.append(line);}card.append(tracks);}
   if(typeof e.id==='string')card.append(makeCommunityLikeButton(e.id,likeMap.get(e.id)||{count:0,mine:false}));
   grids[e.type].append(card);
  }
