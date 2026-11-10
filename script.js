@@ -25,7 +25,7 @@ function render(){for(const t of ['music','eats','moments']){const grid=$(`#${t}
 // Edit only personal notes. Preserve the record id, artwork, metadata, track list and likes.
 const personalEditDialog=document.createElement('dialog');
 personalEditDialog.id='personal-edit-dialog';
-personalEditDialog.innerHTML=`<form id="personal-edit-form"><div class="modalhead"><span>EDIT YOUR RECORD</span><button type="button" id="personal-edit-close" aria-label="닫기">✕</button></div><h3 id="personal-edit-title">Your notes.</h3><label id="personal-edit-format-wrap">소장 형태<select name="format"><option value="DIGITAL">DIGITAL</option><option value="LP">LP</option><option value="CD">CD</option></select></label><label id="personal-edit-rating-wrap">나의 평점 <span id="personal-edit-rating-value"></span><input name="rating" type="range" min="0.5" max="5" step="0.5"></label><label>나의 감상 / 후기<textarea name="comment" rows="5" maxlength="10000" placeholder="어떤 기억으로 남았나요?"></textarea></label><p id="personal-edit-error" role="alert"></p><button class="save" type="submit">SAVE CHANGES ↗</button></form>`;
+personalEditDialog.innerHTML=`<form id="personal-edit-form"><div class="modalhead"><span>EDIT YOUR RECORD</span><button type="button" id="personal-edit-close" aria-label="닫기">✕</button></div><h3 id="personal-edit-title">Your notes.</h3><label id="personal-edit-format-wrap">소장 형태<select name="format"><option value="DIGITAL">DIGITAL</option><option value="LP">LP</option><option value="CD">CD</option><option value="LP + CD">LP + CD</option></select></label><label id="personal-edit-rating-wrap">나의 평점 <span id="personal-edit-rating-value"></span><input name="rating" type="range" min="0.5" max="5" step="0.5"></label><label>나의 감상 / 후기<textarea name="comment" rows="5" maxlength="10000" placeholder="어떤 기억으로 남았나요?"></textarea></label><p id="personal-edit-error" role="alert"></p><button class="save" type="submit">SAVE CHANGES ↗</button></form>`;
 document.body.append(personalEditDialog);
 let personalEditingId=null;
 const personalEditForm=personalEditDialog.querySelector('form');
@@ -41,7 +41,7 @@ function openPersonalEdit(entry){
  personalEditDialog.querySelector('#personal-edit-title').textContent=entry.type==='music'?'Your album notes.':entry.type==='eats'?'Your food notes.':'Your moment notes.';
  personalEditDialog.querySelector('#personal-edit-format-wrap').hidden=entry.type!=='music';
  personalEditDialog.querySelector('#personal-edit-rating-wrap').hidden=entry.type==='moments';
- personalEditForm.elements.format.value=['LP','CD','DIGITAL'].includes(entry.format)?entry.format:'DIGITAL';
+ personalEditForm.elements.format.value=['LP','CD','LP + CD','DIGITAL'].includes(entry.format)?entry.format:'DIGITAL';
  personalEditForm.elements.rating.value=String(Math.max(.5,Math.min(5,Number(entry.rating)||4)));
  personalEditForm.elements.comment.value=entry.comment||'';
  personalEditDialog.querySelector('#personal-edit-rating-value').textContent=Number(personalEditForm.elements.rating.value).toFixed(1)+' / 5';
