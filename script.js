@@ -149,6 +149,13 @@ async function openArtworkPreview(entry){
  else if(entry.type!=='music'){addPreviewText(body,'p','artwork-note','이 기록에는 사진이 없어요.');}
  if(entry.type==='moments')addPreviewText(body,'h3','artwork-photo-title',entry.momentTitle||'Untitled');
  if(entry.type==='eats')addPreviewText(body,'h3','artwork-photo-title',entry.food||'Untitled');
+ if(entry.type==='moments'||entry.type==='eats'){
+  const timestamp=Number(entry.created);
+  if(Number.isFinite(timestamp)&&timestamp>0){
+   const date=new Date(timestamp);
+   if(!Number.isNaN(date.getTime()))addPreviewText(body,'p','artwork-photo-date',date.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit',day:'2-digit'}));
+  }
+ }
  if(entry.type==='music'){
   addPreviewText(body,'h3','artwork-album-title',entry.album||'Untitled');
   addPreviewText(body,'p','artwork-album-artist',entry.artist||'');

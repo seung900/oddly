@@ -243,3 +243,5 @@ dialog,#artwork-dialog{background:#ffffff;color:#111111}
 #music-grid .entry .art,#eats-grid .entry,#moments-grid .entry,.person-card{background-color:#ffffff}
 #eats-grid .entry .art img,#moments-grid .entry .art img,#music-grid .entry .art img,.artwork-full,#public-entries .art img{filter:none!important;mix-blend-mode:normal!important}
 /* Keep user-uploaded images and album covers in their original colors. */
+
+.artwork-photo-date{font-family:'DM Sans',Arial,sans-serif;text-align:center;font-size:12px;letter-spacing:.08em;color:#777;margin:5px 0 0;}
