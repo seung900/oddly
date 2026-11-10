@@ -372,3 +372,8 @@ dialog,#artwork-dialog{background:#ffffff;color:#111111}
 }
 /* Future customization can be attached to the profile without altering global styles. */
 #public-profile[data-profile-theme="default"]{color:inherit}
+
+/* Hide personal sections while visiting a member archive. */
+body.viewing-friend-archive main > #music,
+body.viewing-friend-archive main > #eats,
+body.viewing-friend-archive main > #moments { display:none !important; }

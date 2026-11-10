@@ -85,7 +85,7 @@ document.querySelector('#auth-sign-out').addEventListener('click',async()=>{
  const {error}=await cloudClient.auth.signOut();if(error){cloudMessage(error.message);return;}
  cloudUser=null;cloudGeneration++;entries=[];cloudLocalSave();cloudUi();clearDiscovery();loadFriends();cloudMessage('로그아웃했어요. 클라우드 기록은 유지돼요.');
 });
-function clearDiscovery(){document.querySelector('#people-list').innerHTML='';for(const type of ['music','eats','moments'])document.querySelector(`#friend-${type}-grid`).replaceChildren();document.querySelector('#public-profile').hidden=true;}
+function clearDiscovery(){document.body.classList.remove('viewing-friend-archive');document.querySelector('#people-list').innerHTML='';for(const type of ['music','eats','moments'])document.querySelector(`#friend-${type}-grid`).replaceChildren();document.querySelector('#public-profile').hidden=true;}
 function profileText(id,value){document.querySelector(id).textContent=value;}
 const profileDialog=document.querySelector('#profile-dialog');
 document.querySelector('#profile-open').addEventListener('click',async()=>{
@@ -143,7 +143,7 @@ async function loadPeople(){
 }
 async function openPerson(person){
  if(!cloudUser)return;
- peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;document.querySelector('#public-profile').dataset.profileTheme='default';
+ document.body.classList.add('viewing-friend-archive');peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;document.querySelector('#public-profile').dataset.profileTheme='default';
  profileText('#public-profile-title',person.display_name);profileText('#public-profile-bio',person.bio||'');
  profileText('#discover-status','LOADING...');
  const grids=Object.fromEntries(['music','eats','moments'].map(t=>[t,document.querySelector(`#friend-${t}-grid`)]));
@@ -169,7 +169,7 @@ async function openPerson(person){
  }
  for(const type of Object.keys(grids)){if(!counts[type]){const empty=document.createElement('p');empty.className='friend-empty';empty.textContent='NO RECORDS';grids[type].append(empty);}}
 }
-document.querySelector('#people-back').addEventListener('click',()=>{peopleList.hidden=false;document.querySelector('#public-profile').hidden=true;profileText('#discover-status','회원 목록');});
+document.querySelector('#people-back').addEventListener('click',()=>{document.body.classList.remove('viewing-friend-archive');peopleList.hidden=false;document.querySelector('#public-profile').hidden=true;profileText('#discover-status','회원 목록');});
 document.querySelector('#discover-refresh').addEventListener('click',loadPeople);
 if(cloudClient){
  cloudClient.auth.onAuthStateChange((event,session)=>{
