@@ -223,3 +223,9 @@ dialog{background:#fcfcfa;border-color:#333}
 #friends-dialog .friends-columns{gap:24px}
 #visitor-counter{white-space:nowrap}#visitor-counter strong{font-weight:500;color:var(--ink)}
 @media(max-width:650px){#friends-open{order:2}#friends-dialog .friends-columns{grid-template-columns:1fr}#friends-dialog .friend-row{flex-direction:column}}
+
+/* Photo records: show the full landscape/portrait frame, not a square crop. */
+#moments-grid .entry .art,#eats-grid .entry .art{aspect-ratio:auto;height:auto;min-height:0;position:relative;overflow:hidden;display:block}
+#moments-grid .entry .art img,#eats-grid .entry .art img{display:block;width:100%;height:auto;object-fit:contain}
+#moments-grid .entry .art:has(.placeholder),#eats-grid .entry .art:has(.placeholder){aspect-ratio:3/2;display:flex;align-items:center;justify-content:center}
+.artwork-photo-title{font-family:'DM Sans',Arial,sans-serif;font-size:clamp(17px,3vw,23px)!important;font-weight:500;text-align:center;letter-spacing:-.025em;margin:4px 0 0!important;overflow-wrap:anywhere}
