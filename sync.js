@@ -8,31 +8,7 @@ const cloudButton=document.querySelector('#auth-open');
 const ownerKey='seungu-archive-cloud-owner';
 let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
 function cloudMessage(msg){cloudStatus.textContent=msg;}
-function saveLocalCache(){
- // Cloud is the authoritative copy for signed-in users. Avoid duplicating large
- // legacy base64 photos in the browser's small localStorage quota.
- try{localStorage.setItem(KEY,JSON.stringify(entries));return;}
- catch(err){
-  if(!cloudUser)throw err;
-  const slim=entries.map(e=>({...e,image:typeof e.image==='string'&&e.image.startsWith('data:image/')?'':e.image}));
-  localStorage.setItem(KEY,JSON.stringify(slim));
- }
-}
-function cloudLocalSave(){try{saveLocalCache();}catch(e){cloudMessage('LOCAL CACHE FULL — CLOUD RECORDS STILL AVAILABLE');}render();}
-async function cloudUploadImage(file){
- if(!cloudUser||!cloudClient)throw Error('사진 업로드는 로그인 후 이용할 수 있어요.');
- if(!file.type.startsWith('image/'))throw Error('이미지 파일을 선택해 주세요.');
- if(file.size>10*1024*1024)throw Error('사진은 10MB 이하로 선택해 주세요.');
- const userId=cloudUser.id;
- // Convert on-device before upload to keep storage and bandwidth reasonable.
- const base64=await imageData(file);
- const response=await fetch(base64);
- const blob=await response.blob();
- const path=`${userId}/${crypto.randomUUID?crypto.randomUUID():Date.now()+ '-' + Math.random().toString(36).slice(2)}.jpg`;
- const {error}=await cloudClient.storage.from('oddly-entry-images').upload(path,blob,{contentType:'image/jpeg',upsert:false});
- if(error)throw Error('사진 업로드 실패: '+error.message);
- return cloudClient.storage.from('oddly-entry-images').getPublicUrl(path).data.publicUrl;
-}
+function cloudLocalSave(){localStorage.setItem(KEY,JSON.stringify(entries));render();}
 function cloudUi(){
  document.querySelector('#auth-logged-out').hidden=!!cloudUser;
  document.querySelector('#auth-logged-in').hidden=!cloudUser;
@@ -87,7 +63,7 @@ function cloudRemoveEntry(id){
   if(error)throw error;
  }).catch(e=>cloudMessage('클라우드 삭제 실패: '+(e.message||e)));
 }
-window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser,uploadImage:cloudUploadImage};
+window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser};
 cloudButton.addEventListener('click',()=>cloudDialog.showModal());
 document.querySelector('#auth-close').addEventListener('click',()=>cloudDialog.close());
 async function cloudAuth(action){
@@ -107,21 +83,27 @@ document.querySelector('#auth-sync-now').addEventListener('click',async()=>{awai
 document.querySelector('#auth-sign-out').addEventListener('click',async()=>{
  if(!cloudClient)return;clearTimeout(cloudTimer);await cloudLastSave;
  const {error}=await cloudClient.auth.signOut();if(error){cloudMessage(error.message);return;}
- cloudUser=null;cloudGeneration++;entries=[];cloudLocalSave();cloudUi();clearDiscovery();loadFriends();cloudMessage('로그아웃했어요. 클라우드 기록은 유지돼요.');
+ cloudUser=null;cloudGeneration++;entries=[];cloudLocalSave();cloudUi();clearDiscovery();loadFriends();loadOwnCustom();cloudMessage('로그아웃했어요. 클라우드 기록은 유지돼요.');
 });
 function clearDiscovery(){document.body.classList.remove('viewing-friend-archive');document.querySelector('#people-list').innerHTML='';for(const type of ['music','eats','moments'])document.querySelector(`#friend-${type}-grid`).replaceChildren();document.querySelector('#public-profile').hidden=true;}
 function profileText(id,value){document.querySelector(id).textContent=value;}
 const profileDialog=document.querySelector('#profile-dialog');
 let currentAvatarUrl=null;
+const CUSTOM_DEFAULT={theme:'white',font:'sans',layout:'shelf'};
+const CUSTOM_VALUES={theme:['white','black','gray'],font:['sans','serif','mono'],layout:['shelf','grid']};
+function normalizeCustom(data){const out={};for(const k of Object.keys(CUSTOM_DEFAULT))out[k]=CUSTOM_VALUES[k].includes(data?.[k])?data[k]:CUSTOM_DEFAULT[k];return out;}
+function applyCustom(target,settings){if(!target)return;const c=normalizeCustom(settings);target.dataset.customTheme=c.theme;target.dataset.customFont=c.font;target.dataset.customLayout=c.layout;}
+async function loadOwnCustom(){if(!cloudUser){applyCustom(document.body,CUSTOM_DEFAULT);return;}const id=cloudUser.id;const {data,error}=await cloudClient.from('archive_profiles').select('archive_theme,archive_font,archive_layout').eq('id',id).maybeSingle();if(error){console.warn('Custom settings unavailable:',error.message);return;}if(cloudUser?.id===id)applyCustom(document.body,{theme:data?.archive_theme,font:data?.archive_font,layout:data?.archive_layout});}
+
 function avatarNode(url,large=false){const box=document.createElement('span');box.className='profile-avatar'+(large?' profile-avatar-large':'');if(typeof url==='string'&&url.startsWith(CLOUD_URL+'/storage/v1/object/public/oddly-avatars/')){const img=document.createElement('img');img.src=url;img.alt='';img.loading='lazy';box.append(img);}else{box.textContent='◌';}return box;}
 function showAvatar(target,url){target.replaceChildren(avatarNode(url,true));}
 
 document.querySelector('#profile-open').addEventListener('click',async()=>{
  if(!cloudUser)return;profileDialog.showModal();profileText('#profile-status','불러오는 중...');
- const {data,error}=await cloudClient.from('archive_profiles').select('display_name,bio,avatar_url').eq('id',cloudUser.id).maybeSingle();
+ const {data,error}=await cloudClient.from('archive_profiles').select('display_name,bio,avatar_url,archive_theme,archive_font,archive_layout').eq('id',cloudUser.id).maybeSingle();
  if(error){profileText('#profile-status',error.message+' — 먼저 SQL 설정을 완료해 주세요.');return;}
  document.querySelector('#profile-name').value=data?.display_name||'';
- document.querySelector('#profile-bio').value=data?.bio||'';currentAvatarUrl=data?.avatar_url||null;document.querySelector('#profile-avatar-file').value='';showAvatar(document.querySelector('#profile-avatar-preview'),currentAvatarUrl);profileText('#profile-status','');
+ document.querySelector('#profile-bio').value=data?.bio||'';const custom=normalizeCustom({theme:data?.archive_theme,font:data?.archive_font,layout:data?.archive_layout});for(const k of Object.keys(custom))document.querySelector('#custom-'+k).value=custom[k];currentAvatarUrl=data?.avatar_url||null;document.querySelector('#profile-avatar-file').value='';showAvatar(document.querySelector('#profile-avatar-preview'),currentAvatarUrl);profileText('#profile-status','');
 });
 document.querySelector('#profile-close').addEventListener('click',()=>profileDialog.close());
 document.querySelector('#profile-avatar-file').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>2*1024*1024){profileText('#profile-status','JPG, PNG, WEBP / MAX 2MB');e.target.value='';return;}const url=URL.createObjectURL(f);const preview=document.querySelector('#profile-avatar-preview');preview.replaceChildren();const img=document.createElement('img');img.src=url;img.alt='';img.onload=()=>URL.revokeObjectURL(url);preview.append(img);profileText('#profile-status','');});
@@ -129,14 +111,14 @@ document.querySelector('#profile-avatar-remove').addEventListener('click',()=>{c
 document.querySelector('#profile-save').addEventListener('click',async()=>{
  if(!cloudUser)return;const name=document.querySelector('#profile-name').value.trim(),bio=document.querySelector('#profile-bio').value.trim();
  if(!name){profileText('#profile-status','닉네임을 입력해 주세요.');return;}
- const file=document.querySelector('#profile-avatar-file').files?.[0];let avatarUrl=currentAvatarUrl;
+ const file=document.querySelector('#profile-avatar-file').files?.[0];let avatarUrl=currentAvatarUrl;const custom=normalizeCustom(Object.fromEntries(Object.keys(CUSTOM_DEFAULT).map(k=>[k,document.querySelector('#custom-'+k).value])));
  if(file){if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){profileText('#profile-status','JPG, PNG, WEBP / MAX 2MB');return;}
   profileText('#profile-status','UPLOADING...');const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];const path=`${cloudUser.id}/avatar-${Date.now()}.${ext}`;
   const upload=await cloudClient.storage.from('oddly-avatars').upload(path,file,{contentType:file.type,upsert:false});if(upload.error){profileText('#profile-status','UPLOAD FAILED: '+upload.error.message);return;}
   avatarUrl=cloudClient.storage.from('oddly-avatars').getPublicUrl(path).data.publicUrl;
  }
- const {error}=await cloudClient.from('archive_profiles').upsert({id:cloudUser.id,display_name:name,bio,avatar_url:avatarUrl},{onConflict:'id'});
- profileText('#profile-status',error?'SAVE FAILED: '+error.message:'PROFILE SAVED');if(!error){currentAvatarUrl=avatarUrl;document.querySelector('#profile-avatar-file').value='';}
+ const {error}=await cloudClient.from('archive_profiles').upsert({id:cloudUser.id,display_name:name,bio,avatar_url:avatarUrl,archive_theme:custom.theme,archive_font:custom.font,archive_layout:custom.layout},{onConflict:'id'});
+ profileText('#profile-status',error?'SAVE FAILED: '+error.message:'PROFILE SAVED');if(!error){applyCustom(document.body,custom);currentAvatarUrl=avatarUrl;document.querySelector('#profile-avatar-file').value='';}
 });
 // Community likes are stored separately from personal track hearts.
 // Only signed-in members can like entries shared publicly.
@@ -179,9 +161,13 @@ async function loadPeople(){
 }
 async function openPerson(person){
  if(!cloudUser)return;
- document.body.classList.add('viewing-friend-archive');peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;document.querySelector('#public-profile').dataset.profileTheme='default';
+ document.body.classList.add('viewing-friend-archive');peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;applyCustom(document.querySelector('#public-profile'),CUSTOM_DEFAULT);
  showAvatar(document.querySelector('#public-profile-avatar'),person.avatar_url);profileText('#public-profile-title',person.display_name);profileText('#public-profile-bio',person.bio||'');
  profileText('#discover-status','LOADING...');
+ const profileId=person.id;
+ const customization=await cloudClient.from('archive_profiles').select('archive_theme,archive_font,archive_layout').eq('id',profileId).maybeSingle();
+ if(!document.body.classList.contains('viewing-friend-archive'))return;
+ if(!customization.error)applyCustom(document.querySelector('#public-profile'),{theme:customization.data?.archive_theme,font:customization.data?.archive_font,layout:customization.data?.archive_layout});
  const grids=Object.fromEntries(['music','eats','moments'].map(t=>[t,document.querySelector(`#friend-${t}-grid`)]));
  for(const grid of Object.values(grids))grid.replaceChildren();
  const {data,error}=await cloudClient.from('archive_entries').select('entry_data').eq('user_id',person.id).eq('entry_data->>visibility','public').order('created_at',{ascending:false}).limit(100);
@@ -210,10 +196,10 @@ document.querySelector('#discover-refresh').addEventListener('click',loadPeople)
 if(cloudClient){
  cloudClient.auth.onAuthStateChange((event,session)=>{
   const next=session?.user||null;if(next?.id===cloudUser?.id)return;
-  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;if(localStorage.getItem(ownerKey)) {entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();
+  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;if(localStorage.getItem(ownerKey)) {entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
   if(next)setTimeout(()=>cloudPull(true),0);
  });
- cloudClient.auth.getSession().then(({data,error})=>{if(error)cloudMessage(error.message);else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudUi();cloudPull(true);loadFriends();}}).catch(e=>cloudMessage(e.message));
+ cloudClient.auth.getSession().then(({data,error})=>{if(error)cloudMessage(error.message);else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>cloudMessage(e.message));
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cloudUser)cloudPull();});
  window.addEventListener('focus',()=>{if(cloudUser)cloudPull();});
 }else cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');

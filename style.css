@@ -390,3 +390,24 @@ body.viewing-friend-archive main > #moments { display:none !important; }
 .person-card .profile-avatar{margin-right:12px}
 .friend-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .friend-info small{flex-basis:calc(100% - 48px);margin-left:48px}
+
+/* Per-member archive customization. Site navigation stays monochrome. */
+.customize-fields{border:1px solid var(--line);margin:20px 0;padding:12px 16px;display:grid;gap:8px}
+.customize-fields legend{font-size:11px;letter-spacing:1.5px;padding:0 8px}
+.customize-fields select{display:block;width:100%;padding:10px;border:1px solid var(--line);background:var(--white);color:var(--ink)}
+body[data-custom-theme="white"] main > #music,body[data-custom-theme="white"] main > #eats,body[data-custom-theme="white"] main > #moments{background:#fff;color:#111}
+body[data-custom-theme="gray"] main > #music,body[data-custom-theme="gray"] main > #eats,body[data-custom-theme="gray"] main > #moments{background:#e5e5e5;color:#111}
+body[data-custom-theme="black"] main > #music,body[data-custom-theme="black"] main > #eats,body[data-custom-theme="black"] main > #moments{background:#111;color:#f5f5f5;--ink:#f5f5f5;--muted:#aaa;--line:#555;--white:#222}
+body[data-custom-theme="black"] main > #music .entry .art,body[data-custom-theme="black"] main > #eats .entry .art,body[data-custom-theme="black"] main > #moments .entry .art{color:#111}
+#public-profile[data-custom-theme="white"]{background:#fff;color:#111;--ink:#111;--muted:#666;--line:#ddd;--white:#fff}
+#public-profile[data-custom-theme="gray"]{background:#e5e5e5;color:#111;--ink:#111;--muted:#666;--line:#bbb;--white:#eee}
+#public-profile[data-custom-theme="black"]{background:#111;color:#f5f5f5;--ink:#f5f5f5;--muted:#aaa;--line:#555;--white:#222}
+#public-profile[data-custom-theme]{padding:20px}
+body[data-custom-font="serif"] main > #music,body[data-custom-font="serif"] main > #eats,body[data-custom-font="serif"] main > #moments,#public-profile[data-custom-font="serif"]{font-family:Georgia,serif}
+body[data-custom-font="serif"] main > #music h2,body[data-custom-font="serif"] main > #eats h2,body[data-custom-font="serif"] main > #moments h2,body[data-custom-font="serif"] main > #music h3,body[data-custom-font="serif"] main > #eats h3,body[data-custom-font="serif"] main > #moments h3,#public-profile[data-custom-font="serif"] h3,#public-profile[data-custom-font="serif"] h4{font-family:Georgia,serif}
+body[data-custom-font="mono"] main > #music,body[data-custom-font="mono"] main > #eats,body[data-custom-font="mono"] main > #moments,#public-profile[data-custom-font="mono"]{font-family:'DM Mono',monospace}
+body[data-custom-font="mono"] main > #music h2,body[data-custom-font="mono"] main > #eats h2,body[data-custom-font="mono"] main > #moments h2,body[data-custom-font="mono"] main > #music h3,body[data-custom-font="mono"] main > #eats h3,body[data-custom-font="mono"] main > #moments h3,#public-profile[data-custom-font="mono"] h3,#public-profile[data-custom-font="mono"] h4{font-family:'DM Mono',monospace}
+body[data-custom-layout="grid"] #music-grid.album-grid,#public-profile[data-custom-layout="grid"] #friend-music-grid.album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:22px;overflow:visible;padding:20px 0 30px}
+body[data-custom-layout="grid"] #music-grid.album-grid:after,#public-profile[data-custom-layout="grid"] #friend-music-grid.album-grid:after{display:none}
+body[data-custom-layout="grid"] #music-grid .entry,#public-profile[data-custom-layout="grid"] #friend-music-grid .entry{width:auto;flex:auto;margin-left:0}
+@media(max-width:650px){body[data-custom-layout="grid"] #music-grid.album-grid,#public-profile[data-custom-layout="grid"] #friend-music-grid.album-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
