@@ -11,7 +11,7 @@
 
 <body>
     <header><a href="#top" class="logo">ODDLY<span>.</span></a>
-        <nav><a href="#discover">DISCOVER</a><a href="#friends">FRIENDS</a><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
+        <nav><a href="#discover">DISCOVER</a><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="friends-open" class="outline" type="button">FRIENDS</button><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
             class="outline">+ NEW ENTRY</button>
     </header>
     <main id="top">
@@ -19,10 +19,10 @@
             
             <h1>ODDLY<span class="period">.</span></h1>
             <div class="herofoot">
-                <span>SCROLL TO EXPLORE ↓</span>
+                <span>SCROLL TO EXPLORE ↓</span><span id="visitor-counter" aria-live="polite" hidden>VISITS <strong id="visitor-count">—</strong></span>
             </div>
         </section>
-        <section class="section" id="discover"><div class="sectionhead"><div><h2>Discover<span class="period">.</span></h2></div><button class="textbutton" id="discover-refresh" type="button">REFRESH ↗</button></div><p id="discover-status" role="status"></p><div id="people-list" class="people-list"></div><div id="public-profile" hidden><button class="textbutton" id="people-back" type="button">← ALL PEOPLE</button><h3 id="public-profile-title"></h3><p id="public-profile-bio"></p><div id="public-entries" class="cards album-grid"></div></div></section><section class="section" id="friends"><div class="sectionhead"><div><h2>Friends<span class="period">.</span></h2></div><button class="textbutton" id="friends-refresh" type="button">REFRESH ↗</button></div><p id="friends-status" role="status"></p><div class="friends-search"><input id="friends-query" type="search" maxlength="40" placeholder="SEARCH MEMBERS" aria-label="Search members"><button id="friends-search-btn" type="button">SEARCH ↗</button></div><div id="friends-results" class="friends-list"></div><div class="friends-columns"><div><h3>MY FRIENDS <span id="friends-count">0</span></h3><div id="friends-accepted" class="friends-list"></div></div><div><h3>RECEIVED <span id="friends-received-count">0</span></h3><div id="friends-received" class="friends-list"></div><h3>SENT <span id="friends-sent-count">0</span></h3><div id="friends-sent" class="friends-list"></div></div></div></section>
+        <section class="section" id="discover"><div class="sectionhead"><div><h2>Discover<span class="period">.</span></h2></div><button class="textbutton" id="discover-refresh" type="button">REFRESH ↗</button></div><p id="discover-status" role="status"></p><div id="people-list" class="people-list"></div><div id="public-profile" hidden><button class="textbutton" id="people-back" type="button">← ALL PEOPLE</button><h3 id="public-profile-title"></h3><p id="public-profile-bio"></p><div id="public-entries" class="cards album-grid"></div></div></section>
         <section class="section music" id="music">
             <div class="sectionhead">
                 <div>
@@ -108,9 +108,10 @@
             <label>공개 범위<select name="visibility" id="visibility"><option value="private">🔒 나만 보기</option><option value="public">🌐 회원에게 공개</option></select></label><p id="form-error" role="alert"></p><button class="save" type="submit">SAVE TO ODDLY ↗</button>
         </form>
     </dialog>
+    <dialog id="friends-dialog" aria-label="Friends"><div class="modalhead"><span>ODDLY. / FRIENDS</span><button id="friends-close" type="button" aria-label="Close">✕</button></div><div id="friends"><div class="sectionhead"><div><h2>Friends<span class="period">.</span></h2></div><button class="textbutton" id="friends-refresh" type="button">REFRESH ↗</button></div><p id="friends-status" role="status"></p><div class="friends-search"><input id="friends-query" type="search" maxlength="40" placeholder="SEARCH MEMBERS" aria-label="Search members"><button id="friends-search-btn" type="button">SEARCH ↗</button></div><div id="friends-results" class="friends-list"></div><div class="friends-columns"><div><h3>MY FRIENDS <span id="friends-count">0</span></h3><div id="friends-accepted" class="friends-list"></div></div><div><h3>RECEIVED <span id="friends-received-count">0</span></h3><div id="friends-received" class="friends-list"></div><h3>SENT <span id="friends-sent-count">0</span></h3><div id="friends-sent" class="friends-list"></div></div></div></div></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="script.js?v=7"></script>
-    <script src="sync.js?v=7"></script>
+    <script src="script.js?v=8"></script>
+    <script src="sync.js?v=8"></script>
 </body>
 
 </html>
