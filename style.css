@@ -245,3 +245,15 @@ dialog,#artwork-dialog{background:#ffffff;color:#111111}
 /* Keep user-uploaded images and album covers in their original colors. */
 
 .artwork-photo-date{font-family:'DM Sans',Arial,sans-serif;text-align:center;font-size:12px;letter-spacing:.08em;color:#777;margin:5px 0 0;}
+
+/* Public member archive: same editorial language as personal sections */
+#public-profile{margin-top:28px}#public-profile-title{font-size:clamp(42px,7vw,90px);letter-spacing:-.065em;margin:18px 0 6px}#public-profile-bio{font-size:13px;line-height:1.6;max-width:560px}
+.friend-archive-nav{display:flex;gap:24px;border-top:1px solid #222;border-bottom:1px solid #d0d0d0;padding:18px 0;margin:35px 0 55px;font:11px 'DM Mono',monospace;letter-spacing:1.4px}
+.friend-archive-nav a:hover{opacity:.5}.friend-archive-section{padding:12px 0 72px;scroll-margin-top:25px}.friend-archive-section+.friend-archive-section{border-top:1px solid #d0d0d0;padding-top:55px}
+.friend-archive-section h4{font-size:clamp(44px,6vw,78px);font-weight:400;letter-spacing:-.075em;margin:0 0 36px}
+#friend-music-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:28px}
+#friend-music-grid .entry .art{aspect-ratio:1/1}
+#friend-eats-grid .entry .art,#friend-moments-grid .entry .art{height:auto;aspect-ratio:auto;overflow:visible}
+#friend-eats-grid .entry .art img,#friend-moments-grid .entry .art img{height:auto;width:100%;object-fit:contain}
+.friend-empty{font:11px 'DM Mono',monospace;color:#777;letter-spacing:1px;padding:25px 0}
+@media(max-width:650px){.friend-archive-nav{gap:18px;margin:25px 0 40px}#friend-music-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.friend-archive-section{padding-bottom:45px}}

@@ -85,7 +85,7 @@ document.querySelector('#auth-sign-out').addEventListener('click',async()=>{
  const {error}=await cloudClient.auth.signOut();if(error){cloudMessage(error.message);return;}
  cloudUser=null;cloudGeneration++;entries=[];cloudLocalSave();cloudUi();clearDiscovery();loadFriends();cloudMessage('로그아웃했어요. 클라우드 기록은 유지돼요.');
 });
-function clearDiscovery(){document.querySelector('#people-list').innerHTML='';document.querySelector('#public-entries').innerHTML='';document.querySelector('#public-profile').hidden=true;}
+function clearDiscovery(){document.querySelector('#people-list').innerHTML='';for(const type of ['music','eats','moments'])document.querySelector(`#friend-${type}-grid`).replaceChildren();document.querySelector('#public-profile').hidden=true;}
 function profileText(id,value){document.querySelector(id).textContent=value;}
 const profileDialog=document.querySelector('#profile-dialog');
 document.querySelector('#profile-open').addEventListener('click',async()=>{
@@ -142,27 +142,32 @@ async function loadPeople(){
  for(const person of data||[]){const b=document.createElement('button');b.className='person-card';b.type='button';const name=document.createElement('strong');name.textContent=person.display_name;const bio=document.createElement('small');bio.textContent=person.bio||'';b.append(name,bio);b.addEventListener('click',()=>openPerson(person));peopleList.append(b);}
 }
 async function openPerson(person){
- if(!cloudUser)return;peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;
+ if(!cloudUser)return;
+ peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;
  profileText('#public-profile-title',person.display_name);profileText('#public-profile-bio',person.bio||'');
- profileText('#discover-status','공개 기록을 불러오는 중...');const grid=document.querySelector('#public-entries');grid.innerHTML='';
+ profileText('#discover-status','LOADING...');
+ const grids=Object.fromEntries(['music','eats','moments'].map(t=>[t,document.querySelector(`#friend-${t}-grid`)]));
+ for(const grid of Object.values(grids))grid.replaceChildren();
  const {data,error}=await cloudClient.from('archive_entries').select('entry_data').eq('user_id',person.id).eq('entry_data->>visibility','public').order('created_at',{ascending:false}).limit(100);
- if(error){profileText('#discover-status','기록을 불러오지 못했어요: '+error.message);return;}
- profileText('#discover-status',`${data?.length||0}개의 공개 기록`);
- if(!data?.length){grid.textContent='아직 공개한 기록이 없어요.';return;}
- let likeMap;
- try{likeMap=await loadCommunityLikes(data.map(r=>r.entry_data?.id).filter(id=>typeof id==='string'));}
- catch(err){profileText('#discover-status','공개 기록은 보이지만 좋아요를 불러오지 못했어요: '+(err.message||err));likeMap=new Map();}
- for(const row of data){const e=row.entry_data;if(!e||!['music','eats','moments'].includes(e.type))continue;
+ if(error){profileText('#discover-status','ERROR: '+error.message);return;}
+ profileText('#discover-status',`${data?.length||0} RECORDS`);
+ let likeMap=new Map();
+ if(data?.length){try{likeMap=await loadCommunityLikes(data.map(r=>r.entry_data?.id).filter(id=>typeof id==='string'));}catch(err){console.warn('Likes unavailable',err);}}
+ const counts={music:0,eats:0,moments:0};
+ for(const row of data||[]){const e=row.entry_data;if(!e||!grids[e.type])continue;counts[e.type]++;
   const card=document.createElement('article');card.className='entry';const art=document.createElement('div');art.className='art';
-  if(typeof e.image==='string'&&e.image.startsWith('data:image/')){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent='♪';art.append(mark);}card.append(art);if(typeof attachArtworkPreview==='function')attachArtworkPreview(art,e);
-  const title=document.createElement('h3');title.textContent=e.type==='music'?e.album:e.type==='eats'?e.food:e.momentTitle||'Untitled moment';card.append(title);
-  const sub=document.createElement('div');sub.className='sub';sub.textContent=e.type==='music'?e.artist:e.type==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):'MOMENTS';card.append(sub);
+  if(typeof e.image==='string'&&(e.image.startsWith('data:image/')||e.image.startsWith('https://'))){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent=e.type==='music'?'♪':'◌';art.append(mark);}
+  card.append(art);if(typeof attachArtworkPreview==='function')attachArtworkPreview(art,e);
+  const title=document.createElement('h3');title.textContent=e.type==='music'?e.album:e.type==='eats'?e.food:e.momentTitle||'Untitled';card.append(title);
+  const sub=document.createElement('div');sub.className='sub';sub.textContent=e.type==='music'?e.artist:e.type==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):new Date(e.created||Date.now()).toLocaleDateString('ko-KR');card.append(sub);
+  if(e.type==='music'){const format=document.createElement('span');format.className='format';format.textContent=e.format||'DIGITAL';card.append(format);}
   if(e.type!=='moments'){const score=document.createElement('div');score.className='score';score.textContent=`★ ${Number(e.rating||0).toFixed(1)} / 5`;card.append(score);}
   if(e.comment){const comment=document.createElement('p');comment.className='comment';comment.textContent=e.comment;card.append(comment);}
-  if(e.type==='music'&&Array.isArray(e.tracks)){const tracks=document.createElement('div');tracks.className='tracks';for(const t of e.tracks){const line=document.createElement('div');line.className='track';line.textContent=(t.liked?'♥ ':'')+String(t.name||'');tracks.append(line);}card.append(tracks);}
+  if(e.type==='music'&&Array.isArray(e.tracks)&&e.tracks.length){const tracks=document.createElement('div');tracks.className='tracks';for(const t of e.tracks){const line=document.createElement('div');line.className='track';line.textContent=(t.liked?'♥ ':'')+String(t.name||'');tracks.append(line);}card.append(tracks);}
   if(typeof e.id==='string')card.append(makeCommunityLikeButton(e.id,likeMap.get(e.id)||{count:0,mine:false}));
-  grid.append(card);
+  grids[e.type].append(card);
  }
+ for(const type of Object.keys(grids)){if(!counts[type]){const empty=document.createElement('p');empty.className='friend-empty';empty.textContent='NO RECORDS';grids[type].append(empty);}}
 }
 document.querySelector('#people-back').addEventListener('click',()=>{peopleList.hidden=false;document.querySelector('#public-profile').hidden=true;profileText('#discover-status','회원 목록');});
 document.querySelector('#discover-refresh').addEventListener('click',loadPeople);
@@ -189,7 +194,7 @@ async function friendRemove(id){const {error}=await cloudClient.from('archive_fr
 async function friendSend(id){if(!cloudUser||id===cloudUser.id)return;const {error}=await cloudClient.from('archive_friendships').insert({requester_id:cloudUser.id,addressee_id:id});if(error)throw error;}
 let friendRelations=[];
 async function loadFriends(){for(const k of ['accepted','received','sent'])friendEls[k].replaceChildren();for(const id of ['friends-count','friends-received-count','friends-sent-count'])document.getElementById(id).textContent='0';if(!cloudUser){friendRelations=[];friendEls.results.replaceChildren();friendStatus('LOGIN REQUIRED');return;}friendStatus('LOADING...');const {data,error}=await cloudClient.from('archive_friendships').select('id,requester_id,addressee_id,status,created_at').or(`requester_id.eq.${cloudUser.id},addressee_id.eq.${cloudUser.id}`).order('created_at',{ascending:false});if(error){friendStatus('친구 목록 오류: '+error.message+' — 제공된 SQL을 먼저 실행해 주세요.');return;}friendRelations=data||[];const ids=[...new Set(friendRelations.map(r=>r.requester_id===cloudUser.id?r.addressee_id:r.requester_id))];let profiles=[];if(ids.length){const result=await cloudClient.from('archive_profiles').select('id,display_name,bio').in('id',ids);if(result.error){friendStatus('프로필 조회 오류: '+result.error.message);return;}profiles=result.data||[];}const byId=new Map(profiles.map(p=>[p.id,p]));const counts={accepted:0,received:0,sent:0};for(const r of friendRelations){const other=r.requester_id===cloudUser.id?r.addressee_id:r.requester_id;const profile=byId.get(other)||{id:other,display_name:'Unknown member'};if(r.status==='accepted'){counts.accepted++;friendEls.accepted.append(friendRow(profile,[['PROFILE',()=>openFriendProfile(profile)],['REMOVE',()=>friendRemove(r.id)]]));}else if(r.status==='pending'&&r.addressee_id===cloudUser.id){counts.received++;friendEls.received.append(friendRow(profile,[['ACCEPT',()=>friendUpdate(r.id,'accepted')],['DECLINE',()=>friendRemove(r.id)]]));}else if(r.status==='pending'){counts.sent++;friendEls.sent.append(friendRow(profile,[['CANCEL',()=>friendRemove(r.id)]]));}}for(const key of Object.keys(counts))document.getElementById(key==='accepted'?'friends-count':`friends-${key}-count`).textContent=counts[key];friendEmpty(friendEls.accepted,'NO FRIENDS');friendEmpty(friendEls.received,'NO REQUESTS');friendEmpty(friendEls.sent,'NO REQUESTS');friendStatus('');}
-function openFriendProfile(person){document.querySelector('#discover').scrollIntoView({behavior:'smooth'});openPerson(person);}
+function openFriendProfile(person){document.querySelector('#friends-dialog').close();openPerson(person);document.querySelector('#discover').scrollIntoView({behavior:'smooth'});}
 async function searchFriends(){friendEls.results.replaceChildren();if(!cloudUser){friendStatus('LOGIN REQUIRED');return;}const q=document.querySelector('#friends-query').value.trim();if(!q){friendStatus('ENTER A NAME');return;}friendStatus('SEARCHING...');const {data,error}=await cloudClient.from('archive_profiles').select('id,display_name,bio').ilike('display_name',`%${q.replace(/[%_,]/g,'')}%`).neq('id',cloudUser.id).limit(30);if(error){friendStatus('검색 오류: '+error.message);return;}for(const p of data||[]){const r=friendRelations.find(r=>r.requester_id===p.id||r.addressee_id===p.id);let actions;if(!r)actions=[['ADD FRIEND',()=>friendSend(p.id)]];else if(r.status==='accepted')actions=[['FRIENDS',async()=>{}]];else if(r.addressee_id===cloudUser.id)actions=[['ACCEPT',()=>friendUpdate(r.id,'accepted')],['DECLINE',()=>friendRemove(r.id)]];else actions=[['REQUEST SENT',async()=>{}],['CANCEL',()=>friendRemove(r.id)]];friendEls.results.append(friendRow(p,actions));}friendEmpty(friendEls.results,'NO RESULTS');friendStatus(`${data?.length||0} RESULTS`);}
 document.querySelector('#friends-search-btn').addEventListener('click',searchFriends);document.querySelector('#friends-query').addEventListener('keydown',e=>{if(e.key==='Enter')searchFriends();});document.querySelector('#friends-refresh').addEventListener('click',loadFriends);const friendsDialog=document.querySelector('#friends-dialog');
 document.querySelector('#friends-open').addEventListener('click',()=>{if(!friendsDialog.open)friendsDialog.showModal();loadFriends();});
