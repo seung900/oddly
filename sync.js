@@ -238,18 +238,39 @@ async function searchFriends(){friendEls.results.replaceChildren();if(!cloudUser
 document.querySelector('#friends-search-btn').addEventListener('click',searchFriends);document.querySelector('#friends-query').addEventListener('keydown',e=>{if(e.key==='Enter')searchFriends();});document.querySelector('#friends-refresh').addEventListener('click',loadFriends);const friendsDialog=document.querySelector('#friends-dialog');
 document.querySelector('#friends-open').addEventListener('click',()=>{if(!friendsDialog.open)friendsDialog.showModal();loadFriends();});
 document.querySelector('#friends-close').addEventListener('click',()=>friendsDialog.close());
-// VISITS counts one page view per browser tab session (not unique people).
+// Count one visit per tab per Korea-local calendar day, not per refresh.
+function visitDayKST(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
 async function loadVisitCounter(){
  const counter=document.querySelector('#visitor-counter');
  if(!cloudClient||!counter)return;
  try{
-  const key='oddly-visit-counted-v1';
+  const today=visitDayKST(),key='oddly-visit-counted-'+today;
   const first=!sessionStorage.getItem(key);
-  const {data,error}=await cloudClient.rpc(first?'oddly_register_visit':'oddly_get_visits');
-  if(error)throw error;
-  if(first)sessionStorage.setItem(key,'1');
-  document.querySelector('#visitor-count').textContent=Number(data||0).toLocaleString('en-US');
+  const {data,error}=await cloudClient.rpc('oddly_visit_stats',{register_view:first});
+  if(error){
+   // Legacy counter remains visible until the SQL migration is installed.
+   const legacyKey='oddly-visit-counted-v1';
+   const legacyFirst=!sessionStorage.getItem(legacyKey);
+   const legacy=await cloudClient.rpc(legacyFirst?'oddly_register_visit':'oddly_get_visits');
+   if(legacy.error)throw legacy.error;
+   if(legacyFirst)sessionStorage.setItem(legacyKey,'1');
+   document.querySelector('#visitor-count').textContent=Number(legacy.data||0).toLocaleString('en-US');
+   document.querySelector('#visitor-today').textContent='—';
+   counter.hidden=false;
+   console.warn('Daily visits need VISIT_STATS_SETUP.sql:',error.message);
+   return;
+  }
+  if(first){sessionStorage.setItem(key,'1');sessionStorage.setItem('oddly-visit-counted-v1','1');}
+  document.querySelector('#visitor-today').textContent=Number(data?.today||0).toLocaleString('en-US');
+  document.querySelector('#visitor-count').textContent=Number(data?.total||0).toLocaleString('en-US');
   counter.hidden=false;
  }catch(err){console.warn('Visit counter unavailable:',err.message||err);}
 }
 loadVisitCounter();
+let visitCounterDay=visitDayKST();
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState!=='visible')return;
+ const day=visitDayKST();
+ if(day!==visitCounterDay){visitCounterDay=day;loadVisitCounter();}
+});
+
