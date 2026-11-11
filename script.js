@@ -22,42 +22,93 @@ function imageData(file){return new Promise((resolve,reject)=>{if(!file)return r
 form.addEventListener('submit',async e=>{e.preventDefault();const data=new FormData(form),t=type.value;const album=String(data.get('album')||'').trim(),artist=String(data.get('artist')||'').trim(),food=String(data.get('food')||'').trim(),momentTitle=String(data.get('momentTitle')||'').trim();if(t==='music'&&(!album||!artist)){ $('#form-error').textContent='앨범명과 아티스트를 입력해 주세요.';return;}if(t==='eats'&&!food){$('#form-error').textContent='음식 이름을 입력해 주세요.';return;}if(t==='moments'&&!photo.files[0]&&!momentTitle){$('#form-error').textContent='사진이나 제목을 입력해 주세요.';return;}const saveBtn=$('.save');saveBtn.disabled=true;saveBtn.textContent='SAVING...';try{const image=photo.files[0]?await imageData(photo.files[0]):(t==='music'?searchedCover:'');const entry={id:uid(),type:t,albumMeta:t==='music'&&selectedAlbumMeta&&selectedAlbumMeta.title===album&&selectedAlbumMeta.artist===artist?selectedAlbumMeta:null,visibility:String(data.get('visibility'))==='public'?'public':'private',image,album,artist,food,restaurant:String(data.get('restaurant')||'').trim(),location:String(data.get('location')||'').trim(),momentTitle,format:String(data.get('format')||'DIGITAL'),rating:Number(data.get('rating')||4),comment:String(data.get('comment')||'').trim(),tracks:String(data.get('tracks')||'').split('\n').map(s=>s.trim()).filter(Boolean).map(name=>({name,liked:false})),created:Date.now()};entries.unshift(entry);if(!persist()){entries.shift();return;}editor.close();render();}catch(err){$('#form-error').textContent=err.message||'저장에 실패했어요.';}finally{saveBtn.disabled=false;saveBtn.textContent='SAVE TO ODDLY ↗';}});
 function render(){for(const t of ['music','eats','moments']){const grid=$(`#${t}-grid`);grid.innerHTML='';const filtered=entries.filter(x=>x.type===t);if(!filtered.length){grid.innerHTML='<div class="empty">아직 기록이 없어요. 첫 번째 이야기를 남겨보세요 ↗</div>';continue;}for(const e of filtered){const card=document.createElement('article');card.className='entry';const title=t==='music'?e.album:t==='eats'?e.food:e.momentTitle||'Untitled moment';const subtitle=t==='music'?e.artist:t==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):new Date(e.created||Date.now()).toLocaleDateString('ko-KR');const art=e.image?`<img src="${escapeHTML(e.image)}" alt="${escapeHTML(title)}">`:`<span class="placeholder">${t==='music'?'♪':t==='eats'?'✳':'◌'}</span>`;card.innerHTML=`<div class="art">${art}</div><h3>${escapeHTML(title)}</h3><div class="sub">${escapeHTML(subtitle)}</div>${t==='music'?`<span class="format">${escapeHTML(e.format||'DIGITAL')}</span>`:''}${t!=='moments'?`<div class="score">★ ${Number(e.rating||0).toFixed(1)} / 5</div>`:''}${e.comment?`<p class="comment">${escapeHTML(e.comment)}</p>`:''}<div class="privacy-row"><span>${e.visibility==='public'?'🌐 회원 공개':'🔒 비공개'}</span><button type="button" class="privacy-toggle">${e.visibility==='public'?'비공개로 변경':'공개로 변경'}</button></div>${t==='music'&&Array.isArray(e.tracks)&&e.tracks.length?`<div class="tracks">${e.tracks.map((track,i)=>`<div class="track"><span>${escapeHTML(track.name)}</span><button type="button" class="heart ${track.liked?'liked':''}" data-track="${i}" aria-label="${track.liked?'좋아요 취소':'좋아요'}" aria-pressed="${!!track.liked}">${track.liked?'♥':'♡'}</button></div>`).join('')}</div>`:''}<button class="edit-entry" type="button">EDIT RECORD ↗</button><button class="delete" type="button">DELETE ENTRY ×</button>`;attachArtworkPreview(card.querySelector('.art'),e);card.querySelector('.edit-entry').addEventListener('click',()=>openPersonalEdit(e));card.querySelector('.privacy-toggle').addEventListener('click',()=>{if(!window.archiveCloud?.isSignedIn()){alert('공개 설정을 변경하려면 먼저 로그인해 주세요.');return;}const old=e.visibility;e.visibility=old==='public'?'private':'public';if(!persist())e.visibility=old;render();});card.querySelector('.delete').addEventListener('click',()=>{if(confirm('이 기록을 삭제할까요?')){const old=entries;entries=entries.filter(x=>x.id!==e.id);if(!persist())entries=old;else if(window.archiveCloud)window.archiveCloud.removeEntry(e.id);render();}});card.querySelectorAll('[data-track]').forEach(b=>b.addEventListener('click',()=>{const track=e.tracks[Number(b.dataset.track)];track.liked=!track.liked;if(!persist())track.liked=!track.liked;render();}));grid.append(card);}}}
 
-// Edit only personal notes. Preserve the record id, artwork, metadata, track list and likes.
+// Edit existing records without changing their ID, creation date or privacy.
 const personalEditDialog=document.createElement('dialog');
 personalEditDialog.id='personal-edit-dialog';
-personalEditDialog.innerHTML=`<form id="personal-edit-form"><div class="modalhead"><span>EDIT YOUR RECORD</span><button type="button" id="personal-edit-close" aria-label="닫기">✕</button></div><h3 id="personal-edit-title">Your notes.</h3><label id="personal-edit-format-wrap">소장 형태<select name="format"><option value="DIGITAL">DIGITAL</option><option value="LP">LP</option><option value="CD">CD</option><option value="LP + CD">LP + CD</option></select></label><label id="personal-edit-rating-wrap">나의 평점 <span id="personal-edit-rating-value"></span><input name="rating" type="range" min="0.5" max="5" step="0.5"></label><label>나의 감상 / 후기<textarea name="comment" rows="5" maxlength="10000" placeholder="어떤 기억으로 남았나요?"></textarea></label><p id="personal-edit-error" role="alert"></p><button class="save" type="submit">SAVE CHANGES ↗</button></form>`;
+personalEditDialog.innerHTML=`<form id="personal-edit-form"><div class="modalhead"><span>EDIT YOUR RECORD</span><button type="button" id="personal-edit-close" aria-label="닫기">✕</button></div><h3 id="personal-edit-title">Edit record.</h3>
+<label id="edit-album-wrap">앨범명<input name="album" maxlength="300"></label>
+<label id="edit-artist-wrap">아티스트<input name="artist" maxlength="300"></label>
+<label id="edit-food-wrap" hidden>음식 이름<input name="food" maxlength="300"></label>
+<label id="edit-restaurant-wrap" hidden>식당 이름<input name="restaurant" maxlength="300"></label>
+<label id="edit-location-wrap" hidden>식당 위치<input name="location" maxlength="300"></label>
+<label id="edit-moment-wrap" hidden>사진 제목<input name="momentTitle" maxlength="300"></label>
+<label>사진 / 앨범 커버 <small>(JPG, PNG, WebP 등 · 10MB 이하)</small><input name="replacementPhoto" type="file" accept="image/*"></label>
+<div id="edit-image-preview"></div><label class="edit-remove-image-label"><input name="removeImage" type="checkbox"> 기존 사진 삭제</label>
+<label id="personal-edit-format-wrap">소장 형태<select name="format"><option value="DIGITAL">DIGITAL</option><option value="LP">LP</option><option value="CD">CD</option><option value="LP + CD">LP + CD</option></select></label>
+<label id="edit-tracks-wrap">트랙 목록 <small>(한 줄에 한 곡씩)</small><textarea name="tracks" rows="5"></textarea></label>
+<label id="personal-edit-rating-wrap">나의 평점 <span id="personal-edit-rating-value"></span><input name="rating" type="range" min="0.5" max="5" step="0.5"></label>
+<label>나의 감상 / 후기<textarea name="comment" rows="5" maxlength="10000"></textarea></label>
+<p id="personal-edit-error" role="alert"></p><button class="save" type="submit">SAVE CHANGES ↗</button></form>`;
 document.body.append(personalEditDialog);
 let personalEditingId=null;
 const personalEditForm=personalEditDialog.querySelector('form');
+const editField=(name)=>personalEditForm.elements.namedItem(name);
 personalEditDialog.querySelector('#personal-edit-close').addEventListener('click',()=>personalEditDialog.close());
 personalEditDialog.addEventListener('close',()=>{personalEditingId=null;});
 personalEditDialog.addEventListener('click',event=>{if(event.target===personalEditDialog)personalEditDialog.close();});
-personalEditForm.elements.rating.addEventListener('input',()=>{personalEditDialog.querySelector('#personal-edit-rating-value').textContent=Number(personalEditForm.elements.rating.value).toFixed(1)+' / 5';});
+editField('rating').addEventListener('input',()=>{personalEditDialog.querySelector('#personal-edit-rating-value').textContent=Number(editField('rating').value).toFixed(1)+' / 5';});
+function showEditImagePreview(src){
+ const box=personalEditDialog.querySelector('#edit-image-preview');box.replaceChildren();
+ if(src){const img=document.createElement('img');img.src=src;img.alt='현재 또는 새 사진 미리보기';img.style.cssText='display:block;max-width:180px;max-height:180px;object-fit:contain;margin:10px 0';box.append(img);}
+ else{const note=document.createElement('small');note.textContent='등록된 사진이 없어요. 위에서 직접 추가할 수 있어요.';box.append(note);}
+}
+editField('replacementPhoto').addEventListener('change',()=>{
+ const file=editField('replacementPhoto').files?.[0];
+ if(file){const url=URL.createObjectURL(file);showEditImagePreview(url);personalEditDialog.querySelector('#edit-image-preview img')?.addEventListener('load',()=>URL.revokeObjectURL(url),{once:true});editField('removeImage').checked=false;}
+ else{showEditImagePreview(entries.find(e=>e.id===personalEditingId)?.image||'');}
+});
+editField('removeImage').addEventListener('change',()=>{
+ if(editField('removeImage').checked){editField('replacementPhoto').value='';showEditImagePreview('');}
+ else showEditImagePreview(entries.find(e=>e.id===personalEditingId)?.image||'');
+});
 function openPersonalEdit(entry){
  if(window.archiveCloud&&!window.archiveCloud.isSignedIn()){alert('수정하려면 로그인해 주세요.');return;}
- personalEditingId=entry.id;
- personalEditForm.reset();
+ personalEditingId=entry.id;personalEditForm.reset();
  personalEditDialog.querySelector('#personal-edit-error').textContent='';
- personalEditDialog.querySelector('#personal-edit-title').textContent=entry.type==='music'?'Your album notes.':entry.type==='eats'?'Your food notes.':'Your moment notes.';
- personalEditDialog.querySelector('#personal-edit-format-wrap').hidden=entry.type!=='music';
- personalEditDialog.querySelector('#personal-edit-rating-wrap').hidden=entry.type==='moments';
- personalEditForm.elements.format.value=['LP','CD','LP + CD','DIGITAL'].includes(entry.format)?entry.format:'DIGITAL';
- personalEditForm.elements.rating.value=String(Math.max(.5,Math.min(5,Number(entry.rating)||4)));
- personalEditForm.elements.comment.value=entry.comment||'';
- personalEditDialog.querySelector('#personal-edit-rating-value').textContent=Number(personalEditForm.elements.rating.value).toFixed(1)+' / 5';
+ const music=entry.type==='music',eats=entry.type==='eats',moments=entry.type==='moments';
+ personalEditDialog.querySelector('#personal-edit-title').textContent=music?'Edit album.':eats?'Edit food.':'Edit moment.';
+ for(const [id,visible] of [['edit-album-wrap',music],['edit-artist-wrap',music],['edit-food-wrap',eats],['edit-restaurant-wrap',eats],['edit-location-wrap',eats],['edit-moment-wrap',moments],['personal-edit-format-wrap',music],['edit-tracks-wrap',music],['personal-edit-rating-wrap',!moments]])personalEditDialog.querySelector('#'+id).hidden=!visible;
+ for(const name of ['album','artist','food','restaurant','location','momentTitle','comment'])editField(name).value=entry[name]||'';
+ editField('tracks').value=(entry.tracks||[]).map(t=>typeof t==='string'?t:t.name||'').join('\n');
+ editField('format').value=['LP','CD','LP + CD','DIGITAL'].includes(entry.format)?entry.format:'DIGITAL';
+ editField('rating').value=String(Math.max(.5,Math.min(5,Number(entry.rating)||4)));
+ personalEditDialog.querySelector('#personal-edit-rating-value').textContent=Number(editField('rating').value).toFixed(1)+' / 5';
+ showEditImagePreview(entry.image||'');
  personalEditDialog.showModal();
 }
-personalEditForm.addEventListener('submit',event=>{
+personalEditForm.addEventListener('submit',async event=>{
  event.preventDefault();
  const entry=entries.find(item=>item.id===personalEditingId);
- if(!entry){personalEditDialog.querySelector('#personal-edit-error').textContent='기록을 찾을 수 없어요. 새로고침해 주세요.';return;}
- if(window.archiveCloud&&!window.archiveCloud.isSignedIn()){personalEditDialog.querySelector('#personal-edit-error').textContent='로그인 후 수정해 주세요.';return;}
- const previous={comment:entry.comment,rating:entry.rating,format:entry.format};
- entry.comment=personalEditForm.elements.comment.value.trim();
- if(entry.type!=='moments')entry.rating=Number(personalEditForm.elements.rating.value);
- if(entry.type==='music')entry.format=personalEditForm.elements.format.value;
- if(!persist()){Object.assign(entry,previous);return;}
- personalEditDialog.close();render();
+ const errorBox=personalEditDialog.querySelector('#personal-edit-error');
+ if(!entry){errorBox.textContent='기록을 찾을 수 없어요. 새로고침해 주세요.';return;}
+ if(window.archiveCloud&&!window.archiveCloud.isSignedIn()){errorBox.textContent='로그인 후 수정해 주세요.';return;}
+ const album=editField('album').value.trim(),artist=editField('artist').value.trim(),food=editField('food').value.trim();
+ if(entry.type==='music'&&(!album||!artist)){errorBox.textContent='앨범명과 아티스트를 입력해 주세요.';return;}
+ if(entry.type==='eats'&&!food){errorBox.textContent='음식 이름을 입력해 주세요.';return;}
+ const button=personalEditForm.querySelector('button[type="submit"]');button.disabled=true;button.textContent='SAVING...';errorBox.textContent='';
+ try{
+  const changes={};
+  const fields=entry.type==='music'?['album','artist','format']:entry.type==='eats'?['food','restaurant','location']:['momentTitle'];
+  for(const name of fields)changes[name]=editField(name).value.trim();
+  changes.comment=editField('comment').value.trim();
+  if(entry.type!=='moments')changes.rating=Number(editField('rating').value);
+  if(entry.type==='music'){
+   const oldTracks=Array.isArray(entry.tracks)?entry.tracks:[];
+   changes.tracks=editField('tracks').value.split('\n').map(v=>v.trim()).filter(Boolean).map(name=>{
+    const existing=oldTracks.find(t=>(typeof t==='string'?t:t.name)===name);
+    return {name,liked:!!existing?.liked};
+   });
+   if(album!==entry.album||artist!==entry.artist)changes.albumMeta=null;
+  }
+  const file=editField('replacementPhoto').files?.[0];
+  if(file)changes.image=await imageData(file);
+  else if(editField('removeImage').checked)changes.image='';
+  const previous={...entry};
+  Object.assign(entry,changes);
+  if(!persist()){Object.assign(entry,previous);return;}
+  personalEditDialog.close();render();
+ }catch(err){errorBox.textContent=err.message||'수정에 실패했어요.';}
+ finally{button.disabled=false;button.textContent='SAVE CHANGES ↗';}
 });
 
 $('#export').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:1,entries},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`seungu-archive-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
