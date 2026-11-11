@@ -11,7 +11,7 @@
 
 <body>
     <header><a href="#top" class="logo">ODDLY<span>.</span></a>
-        <nav><a href="#discover">DISCOVER</a><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a></nav><button id="friends-open" class="outline" type="button">FRIENDS</button><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
+        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a><a href="#discover">DISCOVER</a></nav><button id="friends-open" class="outline" type="button">FRIENDS</button><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
             class="outline">+ NEW ENTRY</button>
     </header>
     <main id="top">
@@ -22,7 +22,6 @@
                 <span>SCROLL TO EXPLORE ↓</span><span id="visitor-counter" aria-live="polite" hidden>VISITS <strong id="visitor-count">—</strong></span>
             </div>
         </section>
-        <section class="section" id="discover"><div class="sectionhead"><div><h2>Discover<span class="period">.</span></h2></div><button class="textbutton" id="discover-refresh" type="button">SEARCH ↗</button></div><div class="friends-search"><input id="discover-query" type="search" maxlength="40" placeholder="SEARCH NAME OR @ID" aria-label="Search member name or ID"><button id="discover-search" type="button">SEARCH ↗</button></div><p id="discover-status" role="status"></p><div id="people-list" class="people-list"></div><div id="public-profile" hidden><button class="textbutton" id="people-back" type="button">← SEARCH RESULTS</button><div class="public-profile-heading"><div id="public-profile-avatar" class="profile-avatar profile-avatar-large" aria-hidden="true"></div><h3 id="public-profile-title"></h3></div><p id="public-profile-bio"></p><div class="friend-archive-nav" role="navigation" aria-label="Profile sections"><a href="#friend-music">MUSIC</a><a href="#friend-eats">EATS</a><a href="#friend-moments">MOMENTS</a></div><div id="friend-music" class="friend-archive-section"><h4>Music<span class="period">.</span></h4><div id="friend-music-grid" class="cards album-grid"></div></div><div id="friend-eats" class="friend-archive-section"><h4>Eats<span class="period">.</span></h4><div id="friend-eats-grid" class="cards food-grid"></div></div><div id="friend-moments" class="friend-archive-section"><h4>Moments<span class="period">.</span></h4><div id="friend-moments-grid" class="cards moment-grid"></div></div></div></section>
         <section class="section music" id="music">
             <div class="sectionhead">
                 <div>
@@ -54,6 +53,7 @@
             <div id="moments-grid" class="cards moment-grid"></div>
         </section>
         
+        <section class="section" id="discover"><div class="sectionhead"><div><h2>Discover<span class="period">.</span></h2></div><button class="textbutton" id="discover-refresh" type="button">SEARCH ↗</button></div><div class="friends-search"><input id="discover-query" type="search" maxlength="40" placeholder="SEARCH NAME OR @ID" aria-label="Search member name or ID"><button id="discover-search" type="button">SEARCH ↗</button></div><p id="discover-status" role="status"></p><div id="people-list" class="people-list"></div><div id="public-profile" hidden><button class="textbutton" id="people-back" type="button">← SEARCH RESULTS</button><div class="public-profile-heading"><div id="public-profile-avatar" class="profile-avatar profile-avatar-large" aria-hidden="true"></div><h3 id="public-profile-title"></h3></div><p id="public-profile-bio"></p><div class="friend-archive-nav" role="navigation" aria-label="Profile sections"><a href="#friend-music">MUSIC</a><a href="#friend-eats">EATS</a><a href="#friend-moments">MOMENTS</a></div><div id="friend-music" class="friend-archive-section"><h4>Music<span class="period">.</span></h4><div id="friend-music-grid" class="cards album-grid"></div></div><div id="friend-eats" class="friend-archive-section"><h4>Eats<span class="period">.</span></h4><div id="friend-eats-grid" class="cards food-grid"></div></div><div id="friend-moments" class="friend-archive-section"><h4>Moments<span class="period">.</span></h4><div id="friend-moments-grid" class="cards moment-grid"></div></div></div></section>
     </main>
     <footer><span>ODDLY. © 2026</span>
         <div><button id="export" class="footerbtn">BACKUP ↓</button><button id="import" class="footerbtn">RESTORE
