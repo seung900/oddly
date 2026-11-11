@@ -74,12 +74,12 @@ async function cloudAuth(action){
  try{
   const result=action==='signup'?await cloudClient.auth.signUp({email,password,options:{emailRedirectTo:'https://seung900.github.io/seungu-archive/'}}):await cloudClient.auth.signInWithPassword({email,password});
   if(result.error)throw result.error;
-  cloudMessage(action==='signup'&&!result.data.session?'가입 확인 이메일을 보냈어요. 인증 링크를 누른 뒤 로그인해 주세요.':'로그인 성공! 동기화를 시작할게요.');
+  cloudMessage(action==='signup'&&!result.data.session?'가입 확인 이메일을 보냈어요. 인증 링크를 누른 뒤 로그인해 주세요.':'로그인 성공! 동기화를 시작할게요.');if(result.data.session&&cloudDialog.open)cloudDialog.close();
  }catch(e){cloudMessage('로그인/가입 실패: '+(e.message||e));}
 }
 document.querySelector('#auth-sign-in').addEventListener('click',()=>cloudAuth('login'));
 document.querySelector('#auth-sign-up').addEventListener('click',()=>cloudAuth('signup'));
-document.querySelector('#auth-sync-now').addEventListener('click',async()=>{await cloudLastSave;await cloudPull();});
+document.querySelector('#auth-sync-now').addEventListener('click',async()=>{const button=document.querySelector('#auth-sync-now');if(button.disabled)return;button.disabled=true;button.textContent='SYNCING...';try{await cloudLastSave;await cloudPull();if(cloudDialog.open)cloudDialog.close();}catch(e){cloudMessage('동기화 실패: '+(e.message||e));}finally{button.disabled=false;button.textContent='SYNC NOW ↗';}});
 document.querySelector('#auth-sign-out').addEventListener('click',async()=>{
  if(!cloudClient)return;clearTimeout(cloudTimer);await cloudLastSave;
  const {error}=await cloudClient.auth.signOut();if(error){cloudMessage(error.message);return;}
@@ -118,7 +118,7 @@ document.querySelector('#profile-save').addEventListener('click',async()=>{
   avatarUrl=cloudClient.storage.from('oddly-avatars').getPublicUrl(path).data.publicUrl;
  }
  const {error}=await cloudClient.from('archive_profiles').upsert({id:cloudUser.id,display_name:name,handle,bio,avatar_url:avatarUrl,archive_theme:custom.theme,archive_font:custom.font,archive_layout:custom.layout},{onConflict:'id'});
- profileText('#profile-status',error?'SAVE FAILED: '+error.message:'PROFILE SAVED');if(!error){applyCustom(document.body,custom);currentAvatarUrl=avatarUrl;document.querySelector('#profile-avatar-file').value='';}
+ const duplicateHandle=error&&(error.code==='23505'||/archive_profiles_handle_unique|duplicate key|already exists/i.test(error.message||''));profileText('#profile-status',error?(duplicateHandle?'이미 사용 중인 USER ID예요. 다른 아이디를 입력해 주세요.':'SAVE FAILED: '+error.message):'PROFILE SAVED');if(!error){applyCustom(document.body,custom);currentAvatarUrl=avatarUrl;document.querySelector('#profile-avatar-file').value='';}
 });
 // Community likes are stored separately from personal track hearts.
 // Only signed-in members can like entries shared publicly.
