@@ -15,6 +15,7 @@ function cloudUi(){
  document.querySelector('#auth-user').textContent=cloudUser?`로그인: ${cloudUser.email}`:'';
  document.querySelector('#profile-open').hidden=!cloudUser;
  cloudButton.textContent=cloudUser?'☁ SYNC ON':'LOGIN / SYNC';
+ render();
  document.querySelector('#discover-status').textContent=cloudUser?'SEARCH MEMBERS':'LOGIN REQUIRED';
 }
 async function cloudPull(first=false){
