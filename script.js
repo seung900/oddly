@@ -8,7 +8,7 @@ let selectedAlbumMeta=null;
 try{const stored=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(stored))entries=stored;}catch(e){console.warn('저장 데이터 읽기 실패',e)}
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(entries));if(window.archiveCloud)window.archiveCloud.queueSave();return true;}catch(e){alert('브라우저 저장 공간이 부족해요. 사진을 줄이거나 BACKUP으로 기록을 먼저 보관해주세요.');return false;}}
+function persist(){if(window.archiveCloud?.isSignedIn()){window.archiveCloud.queueSave();return true;}try{localStorage.setItem(KEY,JSON.stringify(entries));return true;}catch(e){alert('브라우저 저장 공간이 부족해요. 로그인 후 다시 시도해 주세요.');return false;}}
 function switchType(){const t=type.value;$('#music-search-panel').hidden=t!=='music';['music','eats','moments'].forEach(x=>{$(`#${x}-fields`).hidden=x!==t});$('#rating-label').hidden=t==='moments';$('#form-title').textContent=({music:'Add an album.',eats:'Add a meal.',moments:'Keep a moment.'})[t];}
 function openEditor(t='music'){searchedCover='';selectedAlbumMeta=null;$('#search-results').innerHTML='';$('#search-status').textContent='';form.reset();$('#visibility').value='public';$('#form-error').textContent='';$('#image-preview').innerHTML='';type.value=t;$('#rating-value').textContent='4.0 / 5';switchType();editor.showModal();}
 $('#add').addEventListener('click',()=>openEditor('music'));
