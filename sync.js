@@ -211,14 +211,14 @@ async function openPerson(person){
 function setupFriendArchivePages(grid){
  const cards=[...grid.querySelectorAll(':scope > .entry')];
  grid.parentElement.querySelector('.friend-archive-pager')?.remove();
- if(cards.length<=8)return;
+ if(cards.length<=6)return;
  const mobile=()=>typeof useSwipeArchive==='function'?useSwipeArchive():window.matchMedia('(max-width:650px)').matches;
  const pager=document.createElement('div');pager.className='friend-archive-pager archive-pager';
- let page=0;const max=Math.ceil(cards.length/8);
+ let page=0;const max=Math.ceil(cards.length/6);
  const prev=document.createElement('button');prev.type='button';prev.textContent='←';prev.setAttribute('aria-label','Previous page');
  const label=document.createElement('span');
  const next=document.createElement('button');next.type='button';next.textContent='→';next.setAttribute('aria-label','Next page');
- function draw(){grid.replaceChildren(...(mobile()?cards:cards.slice(page*8,page*8+8)));label.textContent=`${page+1} / ${max}`;prev.disabled=page===0;next.disabled=page===max-1;pager.hidden=mobile();}
+ function draw(){grid.replaceChildren(...(mobile()?cards:cards.slice(page*6,page*6+6)));label.textContent=`${page+1} / ${max}`;prev.disabled=page===0;next.disabled=page===max-1;pager.hidden=mobile();}
  prev.addEventListener('click',()=>{page=Math.max(0,page-1);draw();});next.addEventListener('click',()=>{page=Math.min(max-1,page+1);draw();});
  pager.append(prev,label,next);grid.after(pager);draw();
  const media=window.matchMedia('(max-width:900px) and (pointer:coarse)');
