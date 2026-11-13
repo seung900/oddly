@@ -196,7 +196,47 @@ function attachArtworkPreview(art,entry){
  button.addEventListener('click',()=>openArtworkPreview(entry));
 }
 function addPreviewText(parent,tag,cls,value){if(!value)return;const el=document.createElement(tag);el.className=cls;el.textContent=value;parent.append(el);}
-async function savePhotoView(e){try{const i=new Image();i.crossOrigin='anonymous';i.src=e.image;await i.decode();const c=document.createElement('canvas'),w=1080,p=38,h=Math.round(i.naturalHeight*(w-p*2)/i.naturalWidth);c.width=w;c.height=h+440;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,w,c.height);x.fillStyle='black';x.font='30px Arial';x.fillText('O D D L Y.  /  P H O T O  V I E W',p,110);x.drawImage(i,p,200,w-p*2,h);x.textAlign='center';x.font='bold 43px sans-serif';x.fillText(e.type==='moments'?(e.momentTitle||''):(e.food||''),w/2,h+275,w-p*2);if(e.created){x.fillStyle='#888';x.font='32px Arial';x.fillText(new Date(Number(e.created)).toLocaleDateString('en-CA'),w/2,h+365);}const b=await new Promise(ok=>c.toBlob(ok,'image/png'));const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='ODDLY-photo.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),30000);}catch(err){alert('저장 실패: '+err.message);}}
+async function savePhotoView(e){
+ try{
+  if(!e.image)throw Error('저장할 사진이 없어요.');
+  const i=new Image();i.crossOrigin='anonymous';i.src=e.image;await i.decode();
+  const w=1080,p=38,photoW=w-p*2,photoH=Math.round(i.naturalHeight*photoW/i.naturalWidth);
+  const title=e.type==='moments'?(e.momentTitle||''):(e.food||'');
+  const comment=(e.comment||'').trim();
+  const c=document.createElement('canvas'),x=c.getContext('2d');
+  const lines=[];const maxWidth=photoW-60;
+  x.font='28px sans-serif';
+  for(const paragraph of comment.split('\n')){
+   if(!paragraph){lines.push('');continue;}
+   let line='';
+   for(const char of paragraph){
+    if(x.measureText(line+char).width>maxWidth&&line){lines.push(line);line=char;}else line+=char;
+   }
+   if(line)lines.push(line);
+  }
+  const commentHeight=comment?Math.max(1,lines.length)*43+24:0;
+  c.width=w;c.height=photoH+440+commentHeight;
+  x.fillStyle='#fff';x.fillRect(0,0,w,c.height);
+  x.fillStyle='#111';x.textAlign='left';x.font='30px Arial,sans-serif';
+  x.fillText('O D D L Y.  /  P H O T O  V I E W',p,110);
+  x.drawImage(i,p,200,photoW,photoH);
+  x.textAlign='center';x.font='bold 43px sans-serif';
+  if(title)x.fillText(title,w/2,photoH+275,photoW);
+  if(comment){
+   x.fillStyle='#777';x.font='28px sans-serif';
+   lines.forEach((line,n)=>x.fillText(line,w/2,photoH+320+n*43,maxWidth));
+  }
+  if(e.created){
+   x.fillStyle='#888';x.font='32px Arial,sans-serif';
+   x.fillText(new Date(Number(e.created)).toLocaleDateString('en-CA'),w/2,photoH+365+commentHeight);
+  }
+  const blob=await new Promise(ok=>c.toBlob(ok,'image/png'));
+  if(!blob)throw Error('이미지 생성 실패');
+  const u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download='ODDLY-photo.png';document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),30000);
+ }catch(err){alert('사진 저장 실패: '+err.message);}
+}
 async function openArtworkPreview(entry){
  const request=++artworkRequest;
  const body=artworkDialog.querySelector('#artwork-dialog-body');body.replaceChildren();
