@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://seung900.github.io/oddly/sitemap.xml
