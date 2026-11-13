@@ -1,7 +1,7 @@
  'use strict';
 const CLOUD_URL='https://gdxczepnytobckajugay.supabase.co';
 const CLOUD_KEY='sb_publishable_VZTrdf-ugJNarK8dDhyhjQ_sidI9okx';
-const cloudClient=window.supabase?.createClient(CLOUD_URL,CLOUD_KEY,{auth:{experimental:{passkey:true}}});
+const cloudClient=window.supabase?.createClient(CLOUD_URL,CLOUD_KEY);
 const cloudStatus=document.querySelector('#auth-status');
 const cloudDialog=document.querySelector('#auth-dialog');
 const cloudButton=document.querySelector('#auth-open');
@@ -78,23 +78,6 @@ async function cloudAuth(action){
   cloudMessage(action==='signup'&&!result.data.session?'가입 확인 이메일을 보냈어요. 인증 링크를 누른 뒤 로그인해 주세요.':'로그인 성공! 동기화를 시작할게요.');if(result.data.session&&cloudDialog.open)cloudDialog.close();
  }catch(e){cloudMessage('로그인/가입 실패: '+(e.message||e));}
 }
-async function cloudPasskey(mode){
- const button=document.querySelector(mode==='register'?'#passkey-register':'#passkey-sign-in');
- if(!cloudClient){cloudMessage('인증 라이브러리를 불러오지 못했어요.');return;}
- if(!window.PublicKeyCredential){cloudMessage('이 브라우저에서는 패스키를 지원하지 않아요.');return;}
- if(mode==='register'&&!cloudUser){cloudMessage('먼저 기존 계정으로 로그인해 주세요.');return;}
- button.disabled=true;
- cloudMessage(mode==='register'?'Face ID 패스키를 등록하는 중...':'Face ID 로그인을 요청하는 중...');
- try{
-  const result=mode==='register'?await cloudClient.auth.registerPasskey():await cloudClient.auth.signInWithPasskey();
-  if(result.error)throw result.error;
-  cloudMessage(mode==='register'?'패스키 등록 완료! 다음부터 Face ID로 로그인할 수 있어요.':'Face ID 로그인 성공!');
-  if(mode==='login'&&cloudDialog.open)cloudDialog.close();
- }catch(e){cloudMessage('패스키 '+(mode==='register'?'등록':'로그인')+' 실패: '+(e.message||e));}
- finally{button.disabled=false;}
-}
-document.querySelector('#passkey-register').addEventListener('click',()=>cloudPasskey('register'));
-document.querySelector('#passkey-sign-in').addEventListener('click',()=>cloudPasskey('login'));
 document.querySelector('#auth-sign-in').addEventListener('click',()=>cloudAuth('login'));
 document.querySelector('#auth-sign-up').addEventListener('click',()=>cloudAuth('signup'));
 document.querySelector('#auth-sync-now').addEventListener('click',async()=>{const button=document.querySelector('#auth-sync-now');if(button.disabled)return;button.disabled=true;button.textContent='SYNCING...';try{await cloudLastSave;await cloudPull();if(cloudDialog.open)cloudDialog.close();}catch(e){cloudMessage('동기화 실패: '+(e.message||e));}finally{button.disabled=false;button.textContent='SYNC NOW ↗';}});
