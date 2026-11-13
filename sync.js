@@ -214,7 +214,7 @@ document.querySelector('#discover-refresh').addEventListener('click',loadPeople)
 if(cloudClient){
  cloudClient.auth.onAuthStateChange((event,session)=>{
   const next=session?.user||null;if(next?.id===cloudUser?.id)return;
-  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;if(localStorage.getItem(ownerKey)) {entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
+  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;if(localStorage.getItem(ownerKey)&&localStorage.getItem(ownerKey)!==next?.id){entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
   if(next)setTimeout(()=>cloudPull(true),0);
  });
  cloudClient.auth.getSession().then(({data,error})=>{if(error)cloudMessage(error.message);else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>cloudMessage(e.message));
