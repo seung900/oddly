@@ -430,3 +430,6 @@ body[data-custom-layout="grid"] #music-grid .entry,#public-profile[data-custom-l
 /* Compact photo export action */
 .save-photo-view{font-size:10px!important;padding:5px 8px!important;letter-spacing:.02em!important;line-height:1.2!important;border:1px solid var(--line);background:transparent;color:var(--olive,#5a5a5a);margin:5px 8px 5px 0;cursor:pointer}
 .save-photo-view:hover{background:#e1e1e1}
+
+/* Photo detail comment under title */
+.artwork-photo-comment{font-size:14px;line-height:1.7;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;max-width:680px;margin:8px auto 18px;color:var(--muted,#777)}
