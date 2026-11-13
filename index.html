@@ -18,7 +18,7 @@
 
 <body>
     <header><a href="#top" class="logo">ODDLY<span>.</span></a>
-        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a><a href="#discover">DISCOVER</a></nav><button id="friends-open" class="outline" type="button">FRIENDS</button><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
+        <nav><a href="#music">MUSIC</a><a href="#eats">EATS</a><a href="#moments">MOMENTS</a><a href="#discover">DISCOVER</a></nav><button id="app-refresh" class="outline" type="button" aria-label="새로고침" title="새로고침">↻</button><button id="friends-open" class="outline" type="button">FRIENDS</button><button id="profile-open" class="outline" type="button" hidden>MY PROFILE</button><button id="auth-open" class="outline" type="button">LOGIN / SYNC</button><button id="add"
             class="outline">+ NEW ENTRY</button>
     </header>
     <main id="top">
@@ -119,6 +119,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="script.js?v=14"></script>
     <script src="sync.js?v=12"></script>
+<script>document.getElementById("app-refresh").addEventListener("click",()=>{const u=new URL(location.href);u.searchParams.set("refresh",Date.now().toString());location.replace(u.toString());});</script>
 </body>
 
 </html>
