@@ -207,6 +207,7 @@ async function openArtworkPreview(entry){
  else if(entry.type!=='music'){addPreviewText(body,'p','artwork-note','이 기록에는 사진이 없어요.');}
  if(entry.type==='moments')addPreviewText(body,'h3','artwork-photo-title',entry.momentTitle||'Untitled');
  if(entry.type==='eats')addPreviewText(body,'h3','artwork-photo-title',entry.food||'Untitled');
+ if((entry.type==='moments'||entry.type==='eats')&&entry.comment?.trim())addPreviewText(body,'p','artwork-photo-comment',entry.comment.trim());
  if(entry.type==='moments'||entry.type==='eats'){
   const timestamp=Number(entry.created);
   if(Number.isFinite(timestamp)&&timestamp>0){
