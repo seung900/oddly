@@ -8,7 +8,7 @@ const cloudButton=document.querySelector('#auth-open');
 const ownerKey='seungu-archive-cloud-owner';
 let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
 function cloudMessage(msg){cloudStatus.textContent=msg;}
-function cloudLocalSave(){localStorage.setItem(KEY,JSON.stringify(entries));render();}
+function cloudLocalSave(){try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache unavailable; cloud records remain accessible:',e);}render();}
 function cloudUi(){
  document.querySelector('#auth-logged-out').hidden=!!cloudUser;
  document.querySelector('#auth-logged-in').hidden=!cloudUser;
@@ -37,7 +37,7 @@ async function cloudPull(first=false){
   }
   if(generation!==cloudGeneration||cloudUser?.id!==userId)return;
   entries=[...remote,...localOnly].map(e=>({...e,visibility:e.visibility==='public'?'public':'private'})).sort((a,b)=>(b.created||0)-(a.created||0));
-  localStorage.setItem(ownerKey,userId);cloudLocalSave();
+  try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn('Owner cache unavailable:',e);}cloudLocalSave();
   cloudMessage(`동기화 완료! ${entries.length}개 기록.${localOnly.length?' 기존 기록 '+localOnly.length+'개 가져옴.':''}`);
  }catch(e){cloudMessage('동기화 실패: '+(e.message||e));}
  finally{cloudBusy=false;}
