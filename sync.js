@@ -16,7 +16,7 @@ function cloudUi(){
  document.querySelector('#profile-open').hidden=!cloudUser;
  cloudButton.textContent=cloudUser?'☁ SYNC ON':'LOGIN / SYNC';
  render();
- document.querySelector('#discover-status').textContent=cloudUser?'SEARCH MEMBERS':'LOGIN REQUIRED';
+ document.querySelector('#discover-status').textContent='SEARCH MEMBERS';
 }
 async function cloudPull(first=false){
  if(!cloudUser||cloudBusy)return;
@@ -156,7 +156,6 @@ let discoverRequest=0;
 async function loadPeople(){
  const request=++discoverRequest;
  clearDiscovery();peopleList.hidden=false;
- if(!cloudUser){profileText('#discover-status','LOGIN REQUIRED');return;}
  const raw=document.querySelector('#discover-query').value.trim().replace(/^@/,'');
  if(raw.length<2){profileText('#discover-status','닉네임이나 @아이디를 2글자 이상 입력해 주세요.');return;}
  const query=raw.replace(/[%_,()]/g,'').slice(0,40);
@@ -178,7 +177,6 @@ async function loadPeople(){
 document.querySelector('#discover-search').addEventListener('click',loadPeople);
 document.querySelector('#discover-query').addEventListener('keydown',e=>{if(e.key==='Enter')loadPeople();});
 async function openPerson(person){
- if(!cloudUser)return;
  document.body.classList.add('viewing-friend-archive');peopleList.hidden=true;document.querySelector('#public-profile').hidden=false;applyCustom(document.querySelector('#public-profile'),CUSTOM_DEFAULT);
  showAvatar(document.querySelector('#public-profile-avatar'),person.avatar_url);profileText('#public-profile-title',person.display_name);profileText('#public-profile-bio',person.bio||'');
  profileText('#discover-status','LOADING...');
