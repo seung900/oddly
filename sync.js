@@ -72,7 +72,7 @@ async function cloudAuth(action){
  if(!email||password.length<6){cloudMessage('이메일과 6자 이상의 비밀번호를 입력해 주세요.');return;}
  cloudMessage('처리 중...');
  try{
-  const result=action==='signup'?await cloudClient.auth.signUp({email,password,options:{emailRedirectTo:'https://seung900.github.io/seungu-archive/'}}):await cloudClient.auth.signInWithPassword({email,password});
+  const result=action==='signup'?await cloudClient.auth.signUp({email,password,options:{emailRedirectTo:'https://seung900.github.io/oddly/'}}):await cloudClient.auth.signInWithPassword({email,password});
   if(result.error)throw result.error;
   cloudMessage(action==='signup'&&!result.data.session?'가입 확인 이메일을 보냈어요. 인증 링크를 누른 뒤 로그인해 주세요.':'로그인 성공! 동기화를 시작할게요.');if(result.data.session&&cloudDialog.open)cloudDialog.close();
  }catch(e){cloudMessage('로그인/가입 실패: '+(e.message||e));}
