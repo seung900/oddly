@@ -417,3 +417,6 @@ body[data-custom-layout="grid"] #music-grid .entry,#public-profile[data-custom-l
 
 /* Mobile: swipe Eats and Moments horizontally; desktop keeps four-item pages */
 @media(max-width:650px){#eats-grid.food-grid,#moments-grid.moment-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px;padding:8px 5px 24px;align-items:stretch}#eats-grid.food-grid::-webkit-scrollbar,#moments-grid.moment-grid::-webkit-scrollbar{display:none}#eats-grid .entry,#moments-grid .entry{flex:0 0 min(75vw,290px);width:min(75vw,290px);scroll-snap-align:start;scroll-snap-stop:normal}#eats-grid .empty,#moments-grid .empty{flex:0 0 100%}}
+
+/* Touch phones: enforce horizontal carousel even if viewport exceeds 650px */
+@media(pointer:coarse) and (max-width:900px){body.touch-archive #eats-grid.food-grid,body.touch-archive #moments-grid.moment-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;gap:14px;padding:8px 5px 24px}body.touch-archive #eats-grid .entry,body.touch-archive #moments-grid .entry{flex:0 0 min(75vw,290px);width:min(75vw,290px);scroll-snap-align:start}body.touch-archive .archive-pager{display:none!important}}
