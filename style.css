@@ -414,3 +414,6 @@ body[data-custom-layout="grid"] #music-grid .entry,#public-profile[data-custom-l
 
 /* Four-record navigation for Eats and Moments */
 .archive-pager{display:flex;align-items:center;justify-content:center;gap:22px;margin:34px 0 0;font:12px 'DM Mono',monospace;letter-spacing:1px}.archive-pager button{background:transparent;color:inherit;border:1px solid var(--line);width:42px;height:38px;font-size:19px}.archive-pager button:disabled{opacity:.25;cursor:default}
+
+/* Mobile: swipe Eats and Moments horizontally; desktop keeps four-item pages */
+@media(max-width:650px){#eats-grid.food-grid,#moments-grid.moment-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px;padding:8px 5px 24px;align-items:stretch}#eats-grid.food-grid::-webkit-scrollbar,#moments-grid.moment-grid::-webkit-scrollbar{display:none}#eats-grid .entry,#moments-grid .entry{flex:0 0 min(75vw,290px);width:min(75vw,290px);scroll-snap-align:start;scroll-snap-stop:normal}#eats-grid .empty,#moments-grid .empty{flex:0 0 100%}}
