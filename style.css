@@ -411,3 +411,6 @@ body[data-custom-layout="grid"] #music-grid.album-grid,#public-profile[data-cust
 body[data-custom-layout="grid"] #music-grid.album-grid:after,#public-profile[data-custom-layout="grid"] #friend-music-grid.album-grid:after{display:none}
 body[data-custom-layout="grid"] #music-grid .entry,#public-profile[data-custom-layout="grid"] #friend-music-grid .entry{width:auto;flex:auto;margin-left:0}
 @media(max-width:650px){body[data-custom-layout="grid"] #music-grid.album-grid,#public-profile[data-custom-layout="grid"] #friend-music-grid.album-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+
+/* Four-record navigation for Eats and Moments */
+.archive-pager{display:flex;align-items:center;justify-content:center;gap:22px;margin:34px 0 0;font:12px 'DM Mono',monospace;letter-spacing:1px}.archive-pager button{background:transparent;color:inherit;border:1px solid var(--line);width:42px;height:38px;font-size:19px}.archive-pager button:disabled{opacity:.25;cursor:default}
