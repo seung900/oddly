@@ -74,9 +74,9 @@
       <div id="auth-logged-out">
         <label>이메일<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
         <label>비밀번호<input id="auth-password" type="password" autocomplete="current-password" placeholder="6자 이상"></label>
-        <div class="auth-actions"><button id="auth-sign-in" type="button">LOGIN</button><button id="auth-sign-up" type="button">SIGN UP</button></div>
+        <div class="auth-actions"><button id="auth-sign-in" type="button">LOGIN</button><button id="auth-sign-up" type="button">SIGN UP</button></div><button id="passkey-sign-in" type="button" class="outline">LOGIN WITH FACE ID ↗</button>
       </div>
-      <div id="auth-logged-in" hidden><p id="auth-user"></p><button id="auth-sync-now" type="button">SYNC NOW ↗</button><button id="auth-sign-out" type="button">LOG OUT</button></div>
+      <div id="auth-logged-in" hidden><p id="auth-user"></p><button id="passkey-register" type="button" class="outline">REGISTER PASSKEY ↗</button><button id="auth-sync-now" type="button">SYNC NOW ↗</button><button id="auth-sign-out" type="button">LOG OUT</button></div>
       <p id="auth-status" role="status"></p>
       <p class="auth-note">기록은 이 계정의 클라우드에 저장돼요. 중요한 사진과 기록은 아래 BACKUP으로 별도 보관하는 걸 권장해요.</p>
     </dialog>
@@ -116,9 +116,9 @@
         </form>
     </dialog>
     <dialog id="friends-dialog" aria-label="Friends"><div class="modalhead"><span>ODDLY. / FRIENDS</span><button id="friends-close" type="button" aria-label="Close">✕</button></div><div id="friends"><div class="sectionhead"><div><h2>Friends<span class="period">.</span></h2></div><button class="textbutton" id="friends-refresh" type="button">REFRESH ↗</button></div><p id="friends-status" role="status"></p><div class="friends-search"><input id="friends-query" type="search" maxlength="40" placeholder="SEARCH MEMBERS" aria-label="Search members"><button id="friends-search-btn" type="button">SEARCH ↗</button></div><div id="friends-results" class="friends-list"></div><div class="friends-columns"><div><h3>MY FRIENDS <span id="friends-count">0</span></h3><div id="friends-accepted" class="friends-list"></div></div><div><h3>RECEIVED <span id="friends-received-count">0</span></h3><div id="friends-received" class="friends-list"></div><h3>SENT <span id="friends-sent-count">0</span></h3><div id="friends-sent" class="friends-list"></div></div></div></div></dialog>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
     <script src="script.js?v=15"></script>
-    <script src="sync.js?v=14"></script>
+    <script src="sync.js?v=15"></script>
 <script>
 document.getElementById("app-refresh").addEventListener("click",async()=>{
  const btn=document.getElementById("app-refresh");btn.disabled=true;btn.textContent="…";
