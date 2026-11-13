@@ -198,7 +198,7 @@ async function openPerson(person){
   const card=document.createElement('article');card.className='entry';const art=document.createElement('div');art.className='art';
   if(typeof e.image==='string'&&(e.image.startsWith('data:image/')||e.image.startsWith('https://'))){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent=e.type==='music'?'♪':'◌';art.append(mark);}
   card.append(art);if(typeof attachArtworkPreview==='function')attachArtworkPreview(art,e);
-  const title=document.createElement('h3');title.textContent=e.type==='music'?e.album:e.type==='eats'?e.food:e.momentTitle||'Untitled';card.append(title);
+  const title=document.createElement('h3');title.textContent=e.type==='music'?e.album:e.type==='eats'?e.food:e.momentTitle||'';card.append(title);
   const sub=document.createElement('div');sub.className='sub';sub.textContent=e.type==='music'?e.artist:e.type==='eats'?[e.restaurant,e.location].filter(Boolean).join(' · '):new Date(e.created||Date.now()).toLocaleDateString('ko-KR');card.append(sub);
   if(e.type==='music'){const format=document.createElement('span');format.className='format';format.textContent=e.format||'DIGITAL';card.append(format);}
   if(e.type!=='moments'){const score=document.createElement('div');score.className='score';score.textContent=`★ ${Number(e.rating||0).toFixed(1)} / 5`;card.append(score);}
@@ -208,6 +208,23 @@ async function openPerson(person){
   grids[e.type].append(card);
  }
  for(const type of Object.keys(grids)){if(!counts[type]){const empty=document.createElement('p');empty.className='friend-empty';empty.textContent='NO RECORDS';grids[type].append(empty);}}
+ for(const type of ['eats','moments'])setupFriendArchivePages(grids[type]);
+}
+function setupFriendArchivePages(grid){
+ const cards=[...grid.querySelectorAll(':scope > .entry')];
+ grid.parentElement.querySelector('.friend-archive-pager')?.remove();
+ if(cards.length<=4)return;
+ const mobile=()=>typeof useSwipeArchive==='function'?useSwipeArchive():window.matchMedia('(max-width:650px)').matches;
+ const pager=document.createElement('div');pager.className='friend-archive-pager archive-pager';
+ let page=0;const max=Math.ceil(cards.length/4);
+ const prev=document.createElement('button');prev.type='button';prev.textContent='←';prev.setAttribute('aria-label','Previous page');
+ const label=document.createElement('span');
+ const next=document.createElement('button');next.type='button';next.textContent='→';next.setAttribute('aria-label','Next page');
+ function draw(){grid.replaceChildren(...(mobile()?cards:cards.slice(page*4,page*4+4)));label.textContent=`${page+1} / ${max}`;prev.disabled=page===0;next.disabled=page===max-1;pager.hidden=mobile();}
+ prev.addEventListener('click',()=>{page=Math.max(0,page-1);draw();});next.addEventListener('click',()=>{page=Math.min(max-1,page+1);draw();});
+ pager.append(prev,label,next);grid.after(pager);draw();
+ const media=window.matchMedia('(max-width:900px) and (pointer:coarse)');
+ const onChange=()=>{if(!grid.isConnected){media.removeEventListener('change',onChange);return;}draw();};media.addEventListener('change',onChange);
 }
 document.querySelector('#people-back').addEventListener('click',()=>{document.body.classList.remove('viewing-friend-archive');peopleList.hidden=false;document.querySelector('#public-profile').hidden=true;profileText('#discover-status','검색 결과');});
 document.querySelector('#discover-refresh').addEventListener('click',loadPeople);
