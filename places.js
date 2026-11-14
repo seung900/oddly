@@ -59,7 +59,7 @@ function populateRegions(){
  for(const r of regions[$('#places-region-type').value]){const o=el('option','',r.name);o.value=r.key;select.append(o);}
  if(selected?.mapType===$('#places-region-type').value)select.value=selected.placeKey;
 }
-async async function showDialog(preset,entry=null){
+async function showDialog(preset,entry=null){
  if(!currentUser()){setStatus('장소를 저장하려면 로그인해 주세요.');return;}
  form.reset();editing=entry;selected=preset||null;
  $('#places-region-type').value=preset?.mapType||mode;
