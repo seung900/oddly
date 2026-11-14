@@ -51,6 +51,12 @@ async function getShapes(type){
    name:clean(f.properties?.name||f.properties?.NAME_2||f.properties?.name_eng||f.properties?.SIG_KOR_NM||f.id||'Region '+(i+1)),
    feature:f
   }));
+  // Dokdo is omitted from the upstream municipality polygons. Add a selectable
+  // map marker at its actual location, without changing the Ulleung-gun polygon.
+  regions.korea.push({
+   key:'dokdo',name:'독도 (울릉군)',
+   feature:{type:'Feature',properties:{name:'독도'},geometry:{type:'Point',coordinates:[131.8691,37.2429]}}
+  });
  }
  return regions[type];
 }
@@ -83,10 +89,10 @@ async function drawMap(){
   const svg=d3.select(map).append('svg').attr('viewBox','0 0 980 530').attr('role','img').attr('aria-label',type==='world'?'세계 국가별 방문 지도':'대한민국 시군구별 방문 지도');
   const collection={type:'FeatureCollection',features:shapes.map(r=>r.feature)};
   const projection=(type==='world'?d3.geoNaturalEarth1():d3.geoMercator()).fitExtent([[25,25],[955,505]],collection);
-  const path=d3.geoPath(projection);
+  const path=d3.geoPath(projection).pointRadius(5);
   const visited=new Set(records.filter(r=>r.mapType===type).map(r=>r.placeKey));
   svg.selectAll('path').data(shapes).enter().append('path')
-   .attr('d',r=>path(r.feature)).attr('class',r=>'places-region'+(visited.has(r.key)?' visited':''))
+   .attr('d',r=>path(r.feature)).attr('class',r=>'places-region'+(r.key==='dokdo'?' places-dokdo':'')+(visited.has(r.key)?' visited':''))
    .attr('tabindex',0).attr('role','button').attr('aria-label',r=>r.name+(visited.has(r.key)?' 방문 기록 있음':''))
    .on('click',(_,r)=>choose(r)).on('keydown',(event,r)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(r);}})
    .append('title').text(r=>r.name);
