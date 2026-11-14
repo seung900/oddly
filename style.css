@@ -487,3 +487,26 @@ body[data-custom-font='classic'] main > :is(#music,#eats,#moments) :is(h2,h3,h4)
 #friend-eats-grid .entry :is(.sub,.comment,.score),#friend-moments-grid .entry :is(.sub,.comment,.score){
  color:var(--theme-ink,var(--ink))!important;
 }
+
+/* Contrast guard: photo cards are paper surfaces even on dark archive themes. */
+#eats-grid .entry,#moments-grid .entry,
+#friend-eats-grid .entry,#friend-moments-grid .entry{
+ background:var(--theme-card,#fff)!important;
+ color:var(--theme-ink,#202020)!important;
+ --ink:var(--theme-ink,#202020);
+ --muted:var(--theme-muted,#666);
+ --line:var(--theme-line,#d6d6d6);
+}
+body[data-custom-theme="black"] :is(#eats-grid,#moments-grid) .entry,
+#public-profile[data-custom-theme="black"] :is(#friend-eats-grid,#friend-moments-grid) .entry,
+body[data-custom-theme="espresso"] :is(#eats-grid,#moments-grid) .entry,
+#public-profile[data-custom-theme="espresso"] :is(#friend-eats-grid,#friend-moments-grid) .entry{
+ background:var(--theme-card,#292929)!important;
+ color:var(--theme-ink,#f7f7f7)!important;
+}
+:is(#eats-grid,#moments-grid,#friend-eats-grid,#friend-moments-grid) .entry :is(h3,p,span,small,.sub,.comment,.score,.privacy-row,.privacy-toggle,.edit-entry,.save-photo-view,.delete){
+ color:var(--ink)!important;
+}
+:is(#eats-grid,#moments-grid,#friend-eats-grid,#friend-moments-grid) .entry :is(button,.privacy-toggle,.edit-entry,.save-photo-view){
+ border-color:var(--line)!important;background:transparent!important;
+}
