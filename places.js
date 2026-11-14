@@ -51,6 +51,35 @@ async function getShapes(type){
    name:clean(f.properties?.name||f.properties?.NAME_2||f.properties?.name_eng||f.properties?.SIG_KOR_NM||f.id||'Region '+(i+1)),
    feature:f
   }));
+  // Merge the districts of metropolitan cities into one selectable region.
+  // Other provinces retain their city/county boundaries.
+  const metroNames=['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시','대전광역시','울산광역시'];
+  const metroAliases=[
+   ['서울특별시','서울','Seoul'],['부산광역시','부산','Busan','Pusan'],
+   ['대구광역시','대구','Daegu','Taegu'],['인천광역시','인천','Incheon','Inchon'],
+   ['광주광역시','광주','Gwangju','Kwangju'],['대전광역시','대전','Daejeon','Taejon'],
+   ['울산광역시','울산','Ulsan']
+  ];
+  const groupFor=f=>{
+   const p=f.properties||{};
+   const province=[p.NAME_1,p.name_1,p.CTP_KOR_NM,p.sido,p.SIDO_NM,p.province,p.parent,p.name,p.NAME_2].filter(Boolean).join(' ');
+   return metroAliases.findIndex(aliases=>aliases.some(alias=>province.toLowerCase().includes(alias.toLowerCase())));
+  };
+  const grouped=new Map();
+  for(const f of geo){const n=groupFor(f);if(n>=0){if(!grouped.has(n))grouped.set(n,[]);grouped.get(n).push(f);}}
+  // GeoJSON polygons can be combined into a MultiPolygon for a unified fill and click target.
+  for(const [n,features] of grouped){
+   if(features.length<2)continue;
+   const polys=[];
+   for(const f of features){
+    if(f.geometry?.type==='Polygon')polys.push(f.geometry.coordinates);
+    if(f.geometry?.type==='MultiPolygon')polys.push(...f.geometry.coordinates);
+   }
+   if(!polys.length)continue;
+   const ids=new Set(features.map(f=>clean(f.id??f.properties?.code??f.properties?.name)));
+   regions.korea=regions.korea.filter(r=>!ids.has(r.key));
+   regions.korea.push({key:'metro-'+n,name:metroNames[n],feature:{type:'Feature',properties:{name:metroNames[n]},geometry:{type:'MultiPolygon',coordinates:polys}}});
+  }
   // Dokdo is omitted from the upstream municipality polygons. Add a selectable
   // map marker at its actual location, without changing the Ulleung-gun polygon.
   regions.korea.push({
