@@ -2,7 +2,7 @@
 (()=>{
 const $=s=>document.querySelector(s);
 const map=$('#places-map'),status=$('#places-map-status'),list=$('#places-records'),dialog=$('#places-dialog'),form=$('#places-form');
-const regions={world:[],korea:[]};let mode='world',records=[],selected=null,owner=null,seq=0;
+const regions={world:[],korea:[]};let mode='world',records=[],selected=null,owner=null,seq=0,editing=null;
 const clean=s=>String(s??'');
 const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=clean(txt);return n;};
 function setStatus(s){status.textContent=s;}
@@ -59,14 +59,19 @@ function populateRegions(){
  for(const r of regions[$('#places-region-type').value]){const o=el('option','',r.name);o.value=r.key;select.append(o);}
  if(selected?.mapType===$('#places-region-type').value)select.value=selected.placeKey;
 }
-async function showDialog(preset){
+async async function showDialog(preset,entry=null){
  if(!currentUser()){setStatus('장소를 저장하려면 로그인해 주세요.');return;}
- form.reset();selected=preset||null;
+ form.reset();editing=entry;selected=preset||null;
  $('#places-region-type').value=preset?.mapType||mode;
  try{await getShapes($('#places-region-type').value);}catch(e){setStatus(e.message);return;}
  populateRegions();
- $('#places-dialog-title').textContent='MARK A VISITED PLACE.';
- $('#places-date').value='';
+ $('#places-dialog-title').textContent=entry?'EDIT PLACE.':'MARK A VISITED PLACE.';
+ $('#places-submit').textContent=entry?'SAVE CHANGES ↗':'SAVE PLACE ↗';
+ $('#places-title').value=entry?.title===entry?.placeName?'':(entry?.title||'');
+ $('#places-date').value=entry?.date||'';
+ $('#places-kind').value=entry?.kind||'scenery';
+ $('#places-comment').value=entry?.comment||'';
+ $('#places-public').checked=entry?entry.visibility!=='private':true;
  $('#places-form-status').textContent='';
  dialog.showModal();
 }
@@ -106,6 +111,7 @@ function renderList(){
   if(r.comment)card.append(el('p','',r.comment));
   const actions=el('div','places-actions');
   if(r.image){const open=el('button','','VIEW PHOTO ↗');open.type='button';open.addEventListener('click',()=>{const w=window.open('','_blank');if(w){w.document.title=r.title;const image=w.document.createElement('img');image.src=r.image;image.style.cssText='max-width:100%;height:auto;display:block;margin:auto';w.document.body.style.background='#111';w.document.body.append(image);}});actions.append(open);}
+  const edit=el('button','','EDIT ↗');edit.type='button';edit.addEventListener('click',()=>showDialog({mapType:r.mapType,placeKey:r.placeKey,placeName:r.placeName},r));actions.append(edit);
   const del=el('button','','DELETE ×');del.type='button';del.addEventListener('click',async()=>{if(!confirm('이 장소 기록을 삭제할까요?'))return;const user=currentUser();if(!user)return;del.disabled=true;const {error}=await cloudClient.from('archive_entries').delete().eq('id',r.id).eq('user_id',user.id);if(error){alert(error.message);del.disabled=false;return;}records=records.filter(x=>x.id!==r.id);paintCounts();renderList();drawMap();});actions.append(del);
   card.append(actions);grid.append(card);
  }
@@ -120,12 +126,12 @@ form.addEventListener('submit',async event=>{
  if(!r){$('#places-form-status').textContent='지역을 선택해 주세요.';return;}
  const btn=$('#places-submit');btn.disabled=true;$('#places-form-status').textContent='SAVING...';
  try{
-  const file=$('#places-photo').files[0];const image=file?await imageData(file):'';
-  const entry={id:crypto.randomUUID(),type:'places',mapType:type,placeKey:key,placeName:r.name,kind:$('#places-kind').value,title:$('#places-title').value.trim()||r.name,date:$('#places-date').value,comment:$('#places-comment').value.trim(),image,visibility:$('#places-public').checked?'public':'private',created:Date.now()};
+  const file=$('#places-photo').files[0];const image=file?await imageData(file):(editing?.image||'');
+  const entry={id:editing?.id||crypto.randomUUID(),type:'places',mapType:type,placeKey:key,placeName:r.name,kind:$('#places-kind').value,title:$('#places-title').value.trim()||r.name,date:$('#places-date').value,comment:$('#places-comment').value.trim(),image,visibility:$('#places-public').checked?'public':'private',created:editing?.created||Date.now()};
   // A place alone is a valid visited-region record; all journal details are optional.
   const {error}=await cloudClient.from('archive_entries').upsert({id:entry.id,user_id:user.id,entry_data:entry},{onConflict:'id'});
   if(error)throw error;
-  records.unshift(entry);mode=type;selected={mapType:type,placeKey:key,placeName:r.name};
+  records=records.filter(x=>x.id!==entry.id);records.unshift(entry);editing=null;mode=type;selected={mapType:type,placeKey:key,placeName:r.name};
   document.querySelectorAll('[data-places-map]').forEach(x=>x.classList.toggle('active',x.dataset.placesMap===type));
   paintCounts();renderList();drawMap();dialog.close();
  }catch(e){$('#places-form-status').textContent='SAVE FAILED: '+e.message;}finally{btn.disabled=false;}
