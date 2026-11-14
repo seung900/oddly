@@ -31,7 +31,7 @@ async function getShapes(type){
    'https://cdn.jsdelivr.net/gh/southkorea/southkorea-maps@master/gadm/json/skorea-municipalities-topo.json',
    'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/gadm/json/skorea-municipalities-topo.json'
   ];
-  let geo=null;
+  let geo=null,municipalTopology=null,municipalGeometries=null;
   for(const url of sources){
    try{
     const response=await fetch(url);
@@ -42,7 +42,7 @@ async function getShapes(type){
     if(!object)throw Error('empty topology');
     const features=topojson.feature(data,object).features;
     if(features.length<100)throw Error('municipalities missing');
-    geo=features;break;
+    geo=features;municipalTopology=data;municipalGeometries=object.geometries;break;
    }catch(e){console.warn('Korea municipal map source unavailable',url,e);}
   }
   if(!geo)throw Error('시·군·구 지도 파일 로딩 실패. 개발자 도구의 Console 오류를 확인해 주세요.');
@@ -66,19 +66,16 @@ async function getShapes(type){
    return metroAliases.findIndex(aliases=>aliases.some(alias=>province.toLowerCase().includes(alias.toLowerCase())));
   };
   const grouped=new Map();
-  for(const f of geo){const n=groupFor(f);if(n>=0){if(!grouped.has(n))grouped.set(n,[]);grouped.get(n).push(f);}}
-  // GeoJSON polygons can be combined into a MultiPolygon for a unified fill and click target.
-  for(const [n,features] of grouped){
-   if(features.length<2)continue;
-   const polys=[];
-   for(const f of features){
-    if(f.geometry?.type==='Polygon')polys.push(f.geometry.coordinates);
-    if(f.geometry?.type==='MultiPolygon')polys.push(...f.geometry.coordinates);
-   }
-   if(!polys.length)continue;
-   const ids=new Set(features.map(f=>clean(f.id??f.properties?.code??f.properties?.name)));
+  geo.forEach((f,i)=>{const n=groupFor(f);if(n>=0){if(!grouped.has(n))grouped.set(n,[]);grouped.get(n).push({feature:f,index:i});}});
+  // Dissolve shared district borders with TopoJSON topology rather than
+  // drawing every district polygon inside one MultiPolygon.
+  for(const [n,members] of grouped){
+   if(members.length<2)continue;
+   const merged=topojson.merge(municipalTopology,members.map(m=>municipalGeometries[m.index]));
+   if(!merged?.coordinates?.length)continue;
+   const ids=new Set(members.map(m=>clean(m.feature.id??m.feature.properties?.code??m.feature.properties?.name??m.index)));
    regions.korea=regions.korea.filter(r=>!ids.has(r.key));
-   regions.korea.push({key:'metro-'+n,name:metroNames[n],feature:{type:'Feature',properties:{name:metroNames[n]},geometry:{type:'MultiPolygon',coordinates:polys}}});
+   regions.korea.push({key:'metro-'+n,name:metroNames[n],feature:{type:'Feature',properties:{name:metroNames[n]},geometry:merged}});
   }
   // Dokdo is omitted from the upstream municipality polygons. Add a selectable
   // map marker at its actual location, without changing the Ulleung-gun polygon.
