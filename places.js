@@ -25,13 +25,35 @@ async function getShapes(type){
   const topology=await response.json();
   regions.world=topojson.feature(topology,topology.objects.countries).features.map(f=>({key:String(f.id),name:f.properties?.name||String(f.id),feature:f}));
  }else{
-  const info=await fetch('https://www.geoboundaries.org/api/current/gbOpen/KOR/ADM1/');
-  if(!info.ok)throw Error('국내 지도 정보 다운로드 실패');
-  const meta=await info.json();
-  const response=await fetch(meta.simplifiedGeometryGeoJSON||meta.gjDownloadURL);
-  if(!response.ok)throw Error('국내 지도 다운로드 실패');
-  const geo=await response.json();
-  regions.korea=geo.features.map((f,i)=>({key:clean(f.properties?.shapeID||f.properties?.shapeName||i),name:clean(f.properties?.shapeName||f.properties?.name||'Region '+(i+1)),feature:f}));
+  // Prefer a static TopoJSON asset: no third-party metadata API or cross-domain redirects.
+  let geo=null,failures=[];
+  const sources=[
+   'https://cdn.jsdelivr.net/gh/southkorea/southkorea-maps@master/gadm/json/skorea-provinces-topo.json',
+   'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/gadm/json/skorea-provinces-topo.json'
+  ];
+  for(const url of sources){
+   try{
+    const response=await fetch(url);
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const topology=await response.json();
+    const object=Object.values(topology.objects||{})[0];
+    if(!object)throw Error('지도의 행정구역 데이터가 없어요.');
+    geo=topojson.feature(topology,object);break;
+   }catch(e){failures.push(e.message);}
+  }
+  if(!geo){
+   for(const endpoint of ['https://geoboundaries-dev.org/api/current/gbOpen/KOR/ADM1/','https://www.geoboundaries.org/api/current/gbOpen/KOR/ADM1/']){
+    try{
+     const info=await fetch(endpoint);if(!info.ok)throw Error('HTTP '+info.status);
+     const meta=await info.json();const url=meta.simplifiedGeometryGeoJSON||meta.gjDownloadURL;
+     if(!url)throw Error('지도 주소 누락');
+     const response=await fetch(url);if(!response.ok)throw Error('HTTP '+response.status);
+     geo=await response.json();if(!Array.isArray(geo.features))throw Error('지도 형식 오류');break;
+    }catch(e){failures.push(e.message);}
+   }
+  }
+  if(!geo)throw Error('국내 지도 제공 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.');
+  regions.korea=geo.features.map((f,i)=>({key:clean(f.properties?.shapeID||f.properties?.shapeName||f.properties?.NAME_1||f.properties?.name||i),name:clean(f.properties?.shapeName||f.properties?.NAME_1||f.properties?.name||f.properties?.name_eng||'Region '+(i+1)),feature:f}));
  }
  return regions[type];
 }
