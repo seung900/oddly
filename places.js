@@ -25,35 +25,28 @@ async function getShapes(type){
   const topology=await response.json();
   regions.world=topojson.feature(topology,topology.objects.countries).features.map(f=>({key:String(f.id),name:f.properties?.name||String(f.id),feature:f}));
  }else{
-  // Prefer a static TopoJSON asset: no third-party metadata API or cross-domain redirects.
-  let geo=null,failures=[];
+  // South Korea si/gun/gu boundaries, rather than entire provinces.
+  // Source: public administrative boundary data, SIG_CD and FULL_NM.
   const sources=[
-   'https://cdn.jsdelivr.net/gh/southkorea/southkorea-maps@master/gadm/json/skorea-provinces-topo.json',
-   'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/gadm/json/skorea-provinces-topo.json'
+   'https://cdn.jsdelivr.net/gh/KnellBalm/kr-admin-geojson@main/sig.geojson',
+   'https://raw.githubusercontent.com/KnellBalm/kr-admin-geojson/main/sig.geojson'
   ];
+  let geo=null;
   for(const url of sources){
    try{
     const response=await fetch(url);
     if(!response.ok)throw Error('HTTP '+response.status);
-    const topology=await response.json();
-    const object=Object.values(topology.objects||{})[0];
-    if(!object)throw Error('지도의 행정구역 데이터가 없어요.');
-    geo=topojson.feature(topology,object);break;
-   }catch(e){failures.push(e.message);}
+    const data=await response.json();
+    if(data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length<150)throw Error('시군구 지도 형식 오류');
+    geo=data;break;
+   }catch(e){console.warn('Korea municipality map fallback:',e.message);}
   }
-  if(!geo){
-   for(const endpoint of ['https://geoboundaries-dev.org/api/current/gbOpen/KOR/ADM1/','https://www.geoboundaries.org/api/current/gbOpen/KOR/ADM1/']){
-    try{
-     const info=await fetch(endpoint);if(!info.ok)throw Error('HTTP '+info.status);
-     const meta=await info.json();const url=meta.simplifiedGeometryGeoJSON||meta.gjDownloadURL;
-     if(!url)throw Error('지도 주소 누락');
-     const response=await fetch(url);if(!response.ok)throw Error('HTTP '+response.status);
-     geo=await response.json();if(!Array.isArray(geo.features))throw Error('지도 형식 오류');break;
-    }catch(e){failures.push(e.message);}
-   }
-  }
-  if(!geo)throw Error('국내 지도 제공 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.');
-  regions.korea=geo.features.map((f,i)=>({key:clean(f.properties?.shapeID||f.properties?.shapeName||f.properties?.NAME_1||f.properties?.name||i),name:clean(f.properties?.shapeName||f.properties?.NAME_1||f.properties?.name||f.properties?.name_eng||'Region '+(i+1)),feature:f}));
+  if(!geo)throw Error('시·군·구 지도를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+  regions.korea=geo.features.map((f,i)=>({
+   key:clean(f.properties?.SIG_CD||i),
+   name:clean(f.properties?.FULL_NM||[f.properties?.SIDO_NM,f.properties?.SIG_KOR_NM].filter(Boolean).join(' ')||'Region '+(i+1)),
+   feature:f
+  }));
  }
  return regions[type];
 }
@@ -78,7 +71,7 @@ async function drawMap(){
  try{
   const shapes=await getShapes(type);if(type!==mode)return;
   map.replaceChildren();
-  const svg=d3.select(map).append('svg').attr('viewBox','0 0 980 530').attr('role','img').attr('aria-label',type==='world'?'세계 국가별 방문 지도':'대한민국 시도별 방문 지도');
+  const svg=d3.select(map).append('svg').attr('viewBox','0 0 980 530').attr('role','img').attr('aria-label',type==='world'?'세계 국가별 방문 지도':'대한민국 시군구별 방문 지도');
   const collection={type:'FeatureCollection',features:shapes.map(r=>r.feature)};
   const projection=(type==='world'?d3.geoNaturalEarth1():d3.geoMercator()).fitExtent([[25,25],[955,505]],collection);
   const path=d3.geoPath(projection);
@@ -88,7 +81,7 @@ async function drawMap(){
    .attr('tabindex',0).attr('role','button').attr('aria-label',r=>r.name+(visited.has(r.key)?' 방문 기록 있음':''))
    .on('click',(_,r)=>choose(r)).on('keydown',(event,r)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(r);}})
    .append('title').text(r=>r.name);
-  setStatus(type==='world'?'국가를 선택해 기록을 확인하거나 추가하세요.':'시·도 지역을 선택해 기록을 확인하거나 추가하세요.');
+  setStatus(type==='world'?'국가를 선택해 기록을 확인하거나 추가하세요.':'시·군·구를 선택해 방문한 지역을 색칠하세요.');
  }catch(e){map.replaceChildren(el('p','places-error','지도를 불러오지 못했어요. 네트워크 연결을 확인해 주세요.'));setStatus(e.message);}
 }
 function choose(r){selected={mapType:mode,placeKey:r.key,placeName:r.name};renderList();list.scrollIntoView({behavior:'smooth',block:'nearest'});}
