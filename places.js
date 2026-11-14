@@ -25,10 +25,11 @@ async function getShapes(type){
   const topology=await response.json();
   regions.world=topojson.feature(topology,topology.objects.countries).features.map(f=>({key:String(f.id),name:f.properties?.name||String(f.id),feature:f}));
  }else{
-  // Stable public 250-feature WGS84 Korean municipality dataset.
+  // Verified repository file: southkorea/southkorea-maps/gadm/json/skorea-municipalities-topo.json
+  // This is a municipality TopoJSON file, not GeoJSON.
   const sources=[
-   'https://raw.githubusercontent.com/KnellBalm/kr-admin-geojson/main/sig.geojson',
-   'https://cdn.jsdelivr.net/gh/KnellBalm/kr-admin-geojson@main/sig.geojson'
+   'https://cdn.jsdelivr.net/gh/southkorea/southkorea-maps@master/gadm/json/skorea-municipalities-topo.json',
+   'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/gadm/json/skorea-municipalities-topo.json'
   ];
   let geo=null;
   for(const url of sources){
@@ -36,14 +37,18 @@ async function getShapes(type){
     const response=await fetch(url);
     if(!response.ok)throw Error('HTTP '+response.status);
     const data=await response.json();
-    if(data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length<200)throw Error('시군구 지도의 데이터가 불완전해요.');
-    geo=data;break;
-   }catch(e){console.warn('Korea map source failed:',url,e);}
+    if(data.type!=='Topology'||!data.objects)throw Error('not TopoJSON');
+    const object=Object.values(data.objects)[0];
+    if(!object)throw Error('empty topology');
+    const features=topojson.feature(data,object).features;
+    if(features.length<100)throw Error('municipalities missing');
+    geo=features;break;
+   }catch(e){console.warn('Korea municipal map source unavailable',url,e);}
   }
-  if(!geo)throw Error('국내 지도 파일을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.');
-  regions.korea=geo.features.map((f,i)=>({
-   key:clean(f.properties?.SIG_CD||i),
-   name:clean(f.properties?.FULL_NM||[f.properties?.SIDO_NM,f.properties?.SIG_KOR_NM].filter(Boolean).join(' ')||'Region '+(i+1)),
+  if(!geo)throw Error('시·군·구 지도 파일 로딩 실패. 개발자 도구의 Console 오류를 확인해 주세요.');
+  regions.korea=geo.map((f,i)=>({
+   key:clean(f.id??f.properties?.code??f.properties?.name??i),
+   name:clean(f.properties?.name||f.properties?.NAME_2||f.properties?.name_eng||f.properties?.SIG_KOR_NM||f.id||'Region '+(i+1)),
    feature:f
   }));
  }
