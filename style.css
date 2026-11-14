@@ -464,3 +464,26 @@ body[data-custom-layout="compact"] #music-grid .entry,#public-profile[data-custo
 
 body[data-custom-font='rounded'] main > :is(#music,#eats,#moments) :is(h2,h3,h4),#public-profile[data-custom-font='rounded'] :is(h2,h3,h4){font-family:'Trebuchet MS',Arial,sans-serif}
 body[data-custom-font='classic'] main > :is(#music,#eats,#moments) :is(h2,h3,h4),#public-profile[data-custom-font='classic'] :is(h2,h3,h4){font-family:'Palatino Linotype',Palatino,Georgia,serif}
+
+/* Uniform photo thumbnails in archive grids; originals remain uncropped in PHOTO VIEW. */
+#eats-grid .entry .art,#moments-grid .entry .art,
+#friend-eats-grid .entry .art,#friend-moments-grid .entry .art{
+ width:100%;aspect-ratio:4/3!important;height:auto!important;
+ display:block!important;overflow:hidden!important;position:relative;
+ background:var(--theme-card,#eee);
+}
+#eats-grid .entry .art img,#moments-grid .entry .art img,
+#friend-eats-grid .entry .art img,#friend-moments-grid .entry .art img{
+ display:block!important;width:100%!important;height:100%!important;
+ position:absolute;inset:0;object-fit:cover!important;
+}
+#eats-grid .entry,#moments-grid .entry,
+#friend-eats-grid .entry,#friend-moments-grid .entry{
+ background:var(--theme-card,transparent)!important;
+ color:var(--theme-ink,var(--ink))!important;
+ border-color:var(--theme-line,var(--line))!important;
+}
+#eats-grid .entry :is(.sub,.comment,.score),#moments-grid .entry :is(.sub,.comment,.score),
+#friend-eats-grid .entry :is(.sub,.comment,.score),#friend-moments-grid .entry :is(.sub,.comment,.score){
+ color:var(--theme-ink,var(--ink))!important;
+}
