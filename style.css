@@ -510,3 +510,15 @@ body[data-custom-theme="espresso"] :is(#eats-grid,#moments-grid) .entry,
 :is(#eats-grid,#moments-grid,#friend-eats-grid,#friend-moments-grid) .entry :is(button,.privacy-toggle,.edit-entry,.save-photo-view){
  border-color:var(--line)!important;background:transparent!important;
 }
+
+/* Music rating contrast follows the selected archive palette. */
+body[data-custom-theme] #music-grid .entry .score,
+#public-profile[data-custom-theme] #friend-music-grid .entry .score{
+ color:var(--theme-ink,var(--ink))!important;
+ opacity:1!important;
+ font-weight:600;
+}
+body[data-custom-theme] #music-grid .entry .score *,
+#public-profile[data-custom-theme] #friend-music-grid .entry .score *{
+ color:inherit!important;opacity:1!important;
+}
