@@ -25,31 +25,25 @@ async function getShapes(type){
   const topology=await response.json();
   regions.world=topojson.feature(topology,topology.objects.countries).features.map(f=>({key:String(f.id),name:f.properties?.name||String(f.id),feature:f}));
  }else{
-  // geoBoundaries ADM2: actual city/county/district polygon boundaries.
-  // The previous unverified static URL could leave the map as an empty rectangle.
-  const endpoints=[
-   'https://www.geoboundaries.org/api/current/gbOpen/KOR/ADM2/',
-   'https://www.geoboundaries.org/api/current/gbHumanitarian/KOR/ADM2/'
+  // Stable public 250-feature WGS84 Korean municipality dataset.
+  const sources=[
+   'https://raw.githubusercontent.com/KnellBalm/kr-admin-geojson/main/sig.geojson',
+   'https://cdn.jsdelivr.net/gh/KnellBalm/kr-admin-geojson@main/sig.geojson'
   ];
   let geo=null;
-  for(const endpoint of endpoints){
+  for(const url of sources){
    try{
-    const res=await fetch(endpoint);
-    if(!res.ok)throw Error('metadata HTTP '+res.status);
-    const meta=await res.json();
-    const url=meta.simplifiedGeometryGeoJSON||meta.gjDownloadURL;
-    if(!url)throw Error('missing geometry URL');
-    const shapes=await fetch(url);
-    if(!shapes.ok)throw Error('geometry HTTP '+shapes.status);
-    const data=await shapes.json();
-    if(data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length<100)throw Error('invalid ADM2 polygons');
+    const response=await fetch(url);
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const data=await response.json();
+    if(data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length<200)throw Error('시군구 지도의 데이터가 불완전해요.');
     geo=data;break;
-   }catch(e){console.warn('Korea ADM2 map source unavailable:',e);}
+   }catch(e){console.warn('Korea map source failed:',url,e);}
   }
-  if(!geo)throw Error('시·군·구 지도 데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+  if(!geo)throw Error('국내 지도 파일을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.');
   regions.korea=geo.features.map((f,i)=>({
-   key:clean(f.properties?.shapeID||f.properties?.shapeName||i),
-   name:clean(f.properties?.shapeName||f.properties?.name||'Region '+(i+1)),
+   key:clean(f.properties?.SIG_CD||i),
+   name:clean(f.properties?.FULL_NM||[f.properties?.SIDO_NM,f.properties?.SIG_KOR_NM].filter(Boolean).join(' ')||'Region '+(i+1)),
    feature:f
   }));
  }
