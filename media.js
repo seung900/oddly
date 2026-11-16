@@ -1,8 +1,8 @@
 'use strict';
 (()=>{
-const $=s=>document.querySelector(s),types=['movies','anime','series'];
+const $=s=>document.querySelector(s),types=['music','eats','moments','movies','anime','series'],mediaTypes=['movies','anime','series'];
 const editor=$('#media-editor'),form=$('#media-form');
-const state={movies:true,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;
+const state={music:true,eats:true,moments:true,movies:true,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;
 const user=()=>typeof cloudUser!=='undefined'?cloudUser:null;
 const safe=s=>String(s??'');
 const node=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=safe(txt);return n;};
@@ -13,14 +13,14 @@ function apply(){
  }
 }
 async function refresh(){
- const u=user(),token=++seq;if(!u){items=[];itemsSettingsId=null;types.forEach(t=>state[t]=(t==='movies'));apply();render();return;}
+ const u=user(),token=++seq;if(!u){items=[];itemsSettingsId=null;types.forEach(t=>state[t]=!['anime','series'].includes(t));apply();render();return;}
  try{
   const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',u.id);
   if(error)throw error;if(token!==seq||user()?.id!==u.id)return;
   const rows=(data||[]).map(x=>x.entry_data).filter(Boolean);
   const pref=rows.find(x=>x.type==='media-settings');itemsSettingsId=pref?.id||null;
-  for(const t of types)state[t]=t==='movies'?pref?.enabled?.movies!==false:!!pref?.enabled?.[t];
-  items=rows.filter(x=>types.includes(x.type));
+  for(const t of types)state[t]=['anime','series'].includes(t)?!!pref?.enabled?.[t]:pref?.enabled?.[t]!==false;
+  items=rows.filter(x=>mediaTypes.includes(x.type));
   apply();render();
   for(const entry of items.filter(x=>x.type==='movies'&&!x.poster))fillPoster(entry,true).catch(console.warn);
  }catch(e){$('#media-settings-status').textContent='LOAD FAILED: '+e.message;}
@@ -183,7 +183,7 @@ form.onsubmit=async e=>{
  }catch(err){$('#media-form-status').textContent='SAVE FAILED: '+err.message;}finally{btn.disabled=false;}
 };
 function render(){
- for(const t of types){const grid=$('#'+t+'-grid');grid.replaceChildren();
+ for(const t of mediaTypes){const grid=$('#'+t+'-grid');grid.replaceChildren();
   const subset=items.filter(x=>x.type===t).sort((a,b)=>(b.created||0)-(a.created||0));
   if(!subset.length){grid.append(node('p','media-empty','아직 등록된 작품이 없어요.'));continue;}
   for(const x of subset){
