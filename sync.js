@@ -7,7 +7,17 @@ const cloudDialog=document.querySelector('#auth-dialog');
 const cloudButton=document.querySelector('#auth-open');
 const ownerKey='seungu-archive-cloud-owner';
 let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
-function cloudLoading(active){document.body.classList.toggle('archive-sync-loading',active);document.querySelector('#archive-loading-status')?.replaceChildren(document.createTextNode(active?'SYNCING YOUR ARCHIVE…':''));}
+let cloudLoadingTimeout=null;
+function cloudLoading(active){
+ clearTimeout(cloudLoadingTimeout);
+ document.body.classList.toggle('archive-sync-loading',active);
+ const status=document.querySelector('#archive-loading-status');
+ if(status)status.textContent=active?'SYNCING YOUR ARCHIVE…':'';
+ if(active)cloudLoadingTimeout=setTimeout(()=>{
+  document.body.classList.remove('archive-sync-loading');
+  if(status)status.textContent='클라우드에서 최신 기록을 불러오는 중이에요…';
+ },2200);
+}
 function cloudMessage(msg){cloudStatus.textContent=msg;}
 function cloudLocalSave(){try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache unavailable; cloud records remain accessible:',e);}render();}
 function cloudUi(){
@@ -247,8 +257,10 @@ if(cloudClient){
   if(next)setTimeout(()=>cloudPull(true),0);else cloudLoading(false);
  });
  cloudClient.auth.getSession().then(({data,error})=>{if(error){cloudMessage(error.message);cloudLoading(false);}else if(!data?.session?.user){cloudLoading(false);}else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudLoading(true);cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>{cloudMessage(e.message);cloudLoading(false);});
- document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cloudUser)cloudPull();});
- window.addEventListener('focus',()=>{if(cloudUser)cloudPull();});
+ let lastResumePull=0;
+ function refreshOnResume(){if(!cloudUser||cloudBusy||Date.now()-lastResumePull<45000)return;lastResumePull=Date.now();cloudPull();}
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshOnResume();});
+ window.addEventListener('focus',refreshOnResume);
 }else {cloudLoading(false);cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');}
 cloudUi();
 
