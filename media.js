@@ -1,8 +1,8 @@
 'use strict';
 (()=>{
 const $=s=>document.querySelector(s),types=['movies','anime','series'];
-const settings=$('#media-settings-dialog'),editor=$('#media-editor'),form=$('#media-form');
-const state={movies:false,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;
+const editor=$('#media-editor'),form=$('#media-form');
+const state={movies:true,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;
 const user=()=>typeof cloudUser!=='undefined'?cloudUser:null;
 const safe=s=>String(s??'');
 const node=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=safe(txt);return n;};
@@ -13,13 +13,13 @@ function apply(){
  }
 }
 async function refresh(){
- const u=user(),token=++seq;if(!u){items=[];itemsSettingsId=null;types.forEach(t=>state[t]=false);apply();render();return;}
+ const u=user(),token=++seq;if(!u){items=[];itemsSettingsId=null;types.forEach(t=>state[t]=(t==='movies'));apply();render();return;}
  try{
   const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',u.id);
   if(error)throw error;if(token!==seq||user()?.id!==u.id)return;
   const rows=(data||[]).map(x=>x.entry_data).filter(Boolean);
   const pref=rows.find(x=>x.type==='media-settings');itemsSettingsId=pref?.id||null;
-  for(const t of types)state[t]=!!pref?.enabled?.[t];
+  for(const t of types)state[t]=t==='movies'?pref?.enabled?.movies!==false:!!pref?.enabled?.[t];
   items=rows.filter(x=>types.includes(x.type));
   apply();render();
   for(const entry of items.filter(x=>x.type==='movies'&&!x.poster))fillPoster(entry,true).catch(console.warn);
@@ -33,9 +33,7 @@ async function saveSettings(){
  if(!error)itemsSettingsId=entry.id;
  $('#media-settings-status').textContent=error?'SAVE FAILED: '+error.message:'SAVED ✓';
 }
-$('#media-settings-open').onclick=()=>{if(!user()){alert('로그인 후 섹션을 설정할 수 있어요.');return;}settings.showModal();};
-$('#media-settings-close').onclick=()=>settings.close();
-document.querySelectorAll('[data-media-toggle]').forEach(n=>n.onchange=async()=>{state[n.dataset.mediaToggle]=n.checked;apply();await saveSettings();});
+document.querySelectorAll('[data-media-toggle]').forEach(n=>n.onchange=async()=>{if(!user()){n.checked=state[n.dataset.mediaToggle];return;}state[n.dataset.mediaToggle]=n.checked;apply();await saveSettings();});
 function open(t,entry=null){
  if(!user()){alert('로그인이 필요해요.');return;}
  kind=t;selected=entry?{title:entry.title,year:entry.year,poster:entry.poster,externalId:entry.externalId,subtitle:entry.subtitle}:null;editId=entry?.id||null;
