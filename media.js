@@ -2,7 +2,7 @@
 (()=>{
 const $=s=>document.querySelector(s),types=['music','eats','moments','movies','anime','series'],mediaTypes=['movies','anime','series'];
 const editor=$('#media-editor'),form=$('#media-form');
-const state={music:true,eats:true,moments:true,movies:true,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;
+const state={music:true,eats:true,moments:true,movies:true,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;const posterAttempts=new Set();let refreshTimer=null;
 const user=()=>typeof cloudUser!=='undefined'?cloudUser:null;
 const safe=s=>String(s??'');
 const node=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=safe(txt);return n;};
@@ -22,7 +22,11 @@ async function refresh(){
   for(const t of types)state[t]=['anime','series'].includes(t)?!!pref?.enabled?.[t]:pref?.enabled?.[t]!==false;
   items=rows.filter(x=>mediaTypes.includes(x.type));
   apply();render();
-  for(const entry of items.filter(x=>x.type==='movies'&&!x.poster))fillPoster(entry,true).catch(console.warn);
+  // Do not block the gallery or retry missing posters on every tab visit.
+  for(const entry of items.filter(x=>x.type==='movies'&&!x.poster&&!posterAttempts.has(x.id))){
+   posterAttempts.add(entry.id);
+   fillPoster(entry,true).catch(console.warn);
+  }
  }catch(e){$('#media-settings-status').textContent='LOAD FAILED: '+e.message;}
 }
 async function saveSettings(){
@@ -198,7 +202,8 @@ function render(){
   }
  }
 }
-cloudClient?.auth.onAuthStateChange(()=>setTimeout(refresh,100));
-setTimeout(refresh,400);
+function scheduleRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(refresh,250);}
+cloudClient?.auth.onAuthStateChange((event)=>{if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='USER_UPDATED')scheduleRefresh();});
+setTimeout(()=>{if(user())scheduleRefresh();},650);
 apply();render();
 })();
