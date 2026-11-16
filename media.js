@@ -58,7 +58,7 @@ async function findMoviePoster(title,year=''){
   const response=await fetch(url);if(!response.ok)return [];
   const data=await response.json();return (data.results||[]).filter(x=>x.trackName&&x.artworkUrl100);
  });
- const normalize=v=>safe(v).toLocaleLowerCase().normalize('NFKC').replace(/[\\s\\p{P}\\p{S}]/gu,'');
+ const normalize=v=>safe(v).toLocaleLowerCase().normalize('NFKC').replace(/[\s\p{P}\p{S}]/gu,'');
  const results=(await Promise.allSettled(jobs)).filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
  const exact=results.filter(x=>normalize(x.trackName)===normalize(query));
  const match=exact.find(x=>!year||x.releaseDate?.startsWith(String(year)))||exact[0];
@@ -69,7 +69,7 @@ async function findMoviePoster(title,year=''){
    const res=await fetch('https://'+lang+'.wikipedia.org/w/api.php?'+params);if(!res.ok)continue;
    const data=await res.json();
    const pages=(data.query?.pages||[]).filter(p=>/영화|film|movie|cinema/i.test([p.description,...(p.categories||[]).map(c=>c.title)].join(' ')));
-   const page=pages.find(p=>normalize(p.title.replace(/\\s*\\([^)]*\\)$/,''))===normalize(query)&&p.thumbnail?.source);
+   const page=pages.find(p=>normalize(p.title.replace(/\s*\([^)]*\)$/,''))===normalize(query)&&p.thumbnail?.source);
    if(page)return page.thumbnail.source;
   }catch(e){console.warn('Poster lookup:',e);}
  }
