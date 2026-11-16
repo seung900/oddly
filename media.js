@@ -66,10 +66,10 @@ async function search(){
    const score=v=>{const n=normalize(v);if(!n)return 0;if(n===target)return 100;if(n.startsWith(target))return 80;if(n.includes(target))return 60;if(target.includes(n)&&n.length>2)return 35;return 0;};
    const catalogs=['KR','US'];
    const jobs=catalogs.map(async country=>{
-    const url='https://itunes.apple.com/search?'+new URLSearchParams({term:q,media:'movie',entity:'movie',attribute:'movieTerm',limit:'50',country});
+    const url='https://itunes.apple.com/search?'+new URLSearchParams({term:q,media:'movie',entity:'movie',limit:'50',country});
     const response=await fetch(url);if(!response.ok)throw Error('iTunes '+country+' HTTP '+response.status);
     const data=await response.json();
-    return (data.results||[]).filter(x=>x.trackName&&x.kind==='feature-movie').map(x=>({
+    return (data.results||[]).filter(x=>x.trackName).map(x=>({
      title:x.trackName,year:x.releaseDate?.slice(0,4)||'',
      poster:x.artworkUrl100?.replace(/100x100(?:bb)?/,'600x600bb')||'',
      externalId:'itunes-'+x.trackId,subtitle:x.primaryGenreName||'',source:'iTunes '+country
@@ -95,7 +95,7 @@ async function search(){
    }
    const outcomes=await Promise.allSettled(jobs);
    const merged=outcomes.filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
-   if(!merged.length&&outcomes.every(x=>x.status==='rejected'))throw Error('영화 검색 서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.');
+   if(!merged.length&&outcomes.every(x=>x.status==='rejected'))status.textContent='검색 서비스 연결 실패. 제목을 직접 등록할 수 있어요.';
    const seen=new Set();
    found=merged.map(x=>({...x,rank:score(x.title)})).filter(x=>x.rank>0)
     .sort((a,b)=>b.rank-a.rank||(!!b.poster)-(!!a.poster))
@@ -109,9 +109,12 @@ async function search(){
    const res=await fetch('https://api.tvmaze.com/search/shows?q='+encodeURIComponent(q));if(!res.ok)throw Error('Series search failed');
    const data=await res.json();found=data.slice(0,20).map(x=>({title:x.show.name,year:x.show.premiered?.slice(0,4)||'',poster:x.show.image?.medium||'',externalId:'tvmaze-'+x.show.id,subtitle:strip(x.show.genres?.join(', ')||'')}));
   }
-  status.textContent=found.length?found.length+' RESULTS':'검색 결과가 없어요.';
+  status.textContent=found.length?found.length+' RESULTS':'검색 결과가 없어요. 아래에서 직접 등록할 수 있어요.';
+  if(kind==='movies'){
+   const manual=node('button','media-result','+ "'+q+'" 직접 등록하기 (포스터 없이)');manual.type='button';manual.onclick=()=>{selected={title:q,year:'',poster:'',externalId:'manual-'+Date.now(),subtitle:'MANUAL'};showSelected();results.replaceChildren();status.textContent='제목이 선택됐어요. 아래에서 저장하세요.';};results.append(manual);
+  }
   for(const item of found){const btn=node('button','media-result');btn.type='button';if(item.poster){const img=node('img');img.src=item.poster;img.alt='';btn.append(img);}btn.append(node('span','',item.title+' · '+(item.year||'—')+' '+item.subtitle));btn.onclick=()=>{selected=item;showSelected();results.replaceChildren();status.textContent='SELECTED ✓';};results.append(btn);}
- }catch(e){status.textContent='SEARCH FAILED: '+e.message;}
+ }catch(e){status.textContent='SEARCH FAILED: '+e.message+' · 제목을 직접 등록할 수 있어요.';if(kind==='movies'){const manual=node('button','media-result','+ "'+q+'" 직접 등록하기');manual.type='button';manual.onclick=()=>{selected={title:q,year:'',poster:'',externalId:'manual-'+Date.now(),subtitle:'MANUAL'};showSelected();results.replaceChildren();status.textContent='제목 선택 완료';};results.append(manual);}}
 }
 $('#media-search-btn').onclick=search;
 $('#media-search').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();search();}};
