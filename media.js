@@ -61,7 +61,7 @@ async function search(){
   if(kind==='movies'){
    // Korean and international catalogs plus Korean/English Wikipedia fallback.
    // Filter out unrelated search matches and rank exact titles first.
-   const normalize=v=>safe(v).toLocaleLowerCase().normalize('NFKC').replace(/[\\s\\p{P}\\p{S}]/gu,'');
+   const normalize=v=>safe(v).toLocaleLowerCase().normalize('NFKC').replace(/[\s\p{P}\p{S}]/gu,'');
    const target=normalize(q);
    const score=v=>{const n=normalize(v);if(!n)return 0;if(n===target)return 100;if(n.startsWith(target))return 80;if(n.includes(target))return 60;if(target.includes(n)&&n.length>2)return 35;return 0;};
    const catalogs=['KR','US'];
@@ -86,8 +86,8 @@ async function search(){
       const label=[x.description,...(x.categories||[]).map(c=>c.title)].join(' ').toLowerCase();
       return /영화|film|movie|cinema/.test(label)&&!/영화 감독|film director|영화 배우/.test(label);
      }).map(x=>({
-      title:x.title.replace(/\\s*\\((영화|film|\\d{4}년 영화|\\d{4} film)\\)$/i,''),
-      year:(x.title.match(/(?:19|20)\\d{2}/)||[])[0]||'',
+      title:x.title.replace(/\s*\((영화|film|\d{4}년 영화|\d{4} film)\)$/i,''),
+      year:(x.title.match(/(?:19|20)\d{2}/)||[])[0]||'',
       poster:x.thumbnail?.source||'',externalId:'wikipedia-'+lang+'-'+x.pageid,
       subtitle:x.description||'Wikipedia',source:'Wikipedia'
      }));
