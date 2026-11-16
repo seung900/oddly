@@ -59,8 +59,49 @@ async function search(){
  try{
   let found=[];
   if(kind==='movies'){
-   const res=await fetch('https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&entity=movie&limit=20&country=US');if(!res.ok)throw Error('iTunes search failed');
-   const data=await res.json();found=(data.results||[]).map(x=>({title:x.trackName,year:x.releaseDate?.slice(0,4)||'',poster:x.artworkUrl100?.replace('100x100bb','600x600bb')||'',externalId:'itunes-'+x.trackId,subtitle:x.primaryGenreName||''}));
+   // Korean and international catalogs plus Korean/English Wikipedia fallback.
+   // Filter out unrelated search matches and rank exact titles first.
+   const normalize=v=>safe(v).toLocaleLowerCase().normalize('NFKC').replace(/[\\s\\p{P}\\p{S}]/gu,'');
+   const target=normalize(q);
+   const score=v=>{const n=normalize(v);if(!n)return 0;if(n===target)return 100;if(n.startsWith(target))return 80;if(n.includes(target))return 60;if(target.includes(n)&&n.length>2)return 35;return 0;};
+   const catalogs=['KR','US'];
+   const jobs=catalogs.map(async country=>{
+    const url='https://itunes.apple.com/search?'+new URLSearchParams({term:q,media:'movie',entity:'movie',attribute:'movieTerm',limit:'50',country});
+    const response=await fetch(url);if(!response.ok)throw Error('iTunes '+country+' HTTP '+response.status);
+    const data=await response.json();
+    return (data.results||[]).filter(x=>x.trackName&&x.kind==='feature-movie').map(x=>({
+     title:x.trackName,year:x.releaseDate?.slice(0,4)||'',
+     poster:x.artworkUrl100?.replace(/100x100(?:bb)?/,'600x600bb')||'',
+     externalId:'itunes-'+x.trackId,subtitle:x.primaryGenreName||'',source:'iTunes '+country
+    }));
+   });
+   // Wikipedia pages are a fallback for titles not carried by iTunes.
+   for(const lang of (/[가-힣]/.test(q)?['ko']:['en'])){
+    jobs.push((async()=>{
+     const params=new URLSearchParams({action:'query',format:'json',formatversion:'2',generator:'search',gsrsearch:q+' 영화',gsrnamespace:'0',gsrlimit:'15',prop:'pageimages|categories|description',piprop:'thumbnail',pithumbsize:'450',cllimit:'20',origin:'*'});
+     const response=await fetch('https://'+lang+'.wikipedia.org/w/api.php?'+params);
+     if(!response.ok)throw Error('Wikipedia HTTP '+response.status);
+     const data=await response.json();
+     return (data.query?.pages||[]).filter(x=>{
+      const label=[x.description,...(x.categories||[]).map(c=>c.title)].join(' ').toLowerCase();
+      return /영화|film|movie|cinema/.test(label)&&!/영화 감독|film director|영화 배우/.test(label);
+     }).map(x=>({
+      title:x.title.replace(/\\s*\\((영화|film|\\d{4}년 영화|\\d{4} film)\\)$/i,''),
+      year:(x.title.match(/(?:19|20)\\d{2}/)||[])[0]||'',
+      poster:x.thumbnail?.source||'',externalId:'wikipedia-'+lang+'-'+x.pageid,
+      subtitle:x.description||'Wikipedia',source:'Wikipedia'
+     }));
+    })());
+   }
+   const outcomes=await Promise.allSettled(jobs);
+   const merged=outcomes.filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
+   if(!merged.length&&outcomes.every(x=>x.status==='rejected'))throw Error('영화 검색 서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.');
+   const seen=new Set();
+   found=merged.map(x=>({...x,rank:score(x.title)})).filter(x=>x.rank>0)
+    .sort((a,b)=>b.rank-a.rank||(!!b.poster)-(!!a.poster))
+    .filter(x=>{const key=normalize(x.title)+'-'+x.year;if(seen.has(key))return false;seen.add(key);return true;})
+    .slice(0,30);
+   if(!found.length)status.textContent='일치하는 영화가 없어요. 원제나 영어 제목으로도 검색해 보세요.';
   }else if(kind==='anime'){
    const res=await fetch('https://api.jikan.moe/v4/anime?q='+encodeURIComponent(q)+'&limit=15&sfw=true');if(!res.ok)throw Error('Anime search temporarily unavailable');
    const data=await res.json();found=(data.data||[]).map(x=>({title:x.title,year:x.year||x.aired?.from?.slice(0,4)||'',poster:x.images?.jpg?.large_image_url||'',externalId:'mal-'+x.mal_id,subtitle:(x.episodes||'?')+' EPISODES'}));
