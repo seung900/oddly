@@ -43,7 +43,7 @@ function open(t,entry=null){
  $('#media-rating-value').textContent=Number($('#media-rating').value).toFixed(1)+' / 5';
  $('#media-comment').value=entry?.comment||'';$('#media-watch-status').value=entry?.watchStatus||'completed';
  $('#media-visibility').value=entry?.visibility||'public';
- $('#media-search-results').replaceChildren();$('#media-search-status').textContent='';$('#media-form-status').textContent='';
+ $('#media-poster-upload').value='';$('#media-search-results').replaceChildren();$('#media-search-status').textContent='';$('#media-form-status').textContent='';
  showSelected();editor.showModal();
 }
 document.querySelectorAll('[data-media-add]').forEach(n=>n.onclick=()=>open(n.dataset.mediaAdd));
@@ -54,6 +54,21 @@ function showSelected(){
  const row=node('div','media-result');if(selected.poster){const img=node('img');img.src=selected.poster;img.alt='';row.append(img);}
  const label=node('span','',selected.title+' ('+(selected.year||'—')+')');row.append(label);box.append(row);
 }
+async function posterFromFile(file){
+ const url=URL.createObjectURL(file);
+ try{
+  const img=new Image();img.src=url;await img.decode();
+  const scale=Math.min(1,720/img.naturalWidth,1000/img.naturalHeight);
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+  return canvas.toDataURL('image/jpeg',0.76);
+ }finally{URL.revokeObjectURL(url);}
+}
+$('#media-poster-upload').addEventListener('change',async()=>{
+ const file=$('#media-poster-upload').files?.[0];if(!file||!selected)return;
+ try{selected={...selected,poster:await posterFromFile(file)};showSelected();$('#media-form-status').textContent='포스터가 준비됐어요 ✓';}
+ catch(e){$('#media-form-status').textContent='이미지를 읽지 못했어요: '+e.message;}
+});
 const strip=s=>safe(s).replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim();
 async function search(){
  const q=$('#media-search').value.trim();if(!q)return;
@@ -137,7 +152,7 @@ function render(){
   if(!subset.length){grid.append(node('p','media-empty','아직 등록된 작품이 없어요.'));continue;}
   for(const x of subset){
    const card=node('article','media-card');
-   if(x.poster){const img=node('img','media-poster');img.src=x.poster;img.alt=x.title+' poster';img.loading='lazy';card.append(img);}
+   if(x.poster){const img=node('img','media-poster');img.src=x.poster;img.alt=x.title+' poster';img.loading='lazy';img.onerror=()=>{img.replaceWith(node('div','media-poster media-poster-empty','NO POSTER'));};card.append(img);}else card.append(node('div','media-poster media-poster-empty','NO POSTER'));
    card.append(node('h3','',x.title));card.append(node('small','',x.year+' · '+x.watchStatus.toUpperCase()));
    card.append(node('p','media-score','★ '+Number(x.rating||0).toFixed(1)+' / 5'));
    if(x.comment)card.append(node('p','media-comment',x.comment));
