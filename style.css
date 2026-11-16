@@ -586,3 +586,12 @@ body[data-custom-theme] #music-grid .entry .score *,
 
 .media-poster-empty{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;background:#ededed;color:#777;font-size:11px;letter-spacing:1px;}
 .media-poster-hint{font-size:11px;opacity:.65;margin-top:0;}
+
+/* Media sections share the spacing and typography of the original archive. */
+.section.media-archive .sectionhead{margin-bottom:48px}
+.section.media-archive .media-grid{margin-top:0;gap:24px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.section.media-archive .media-card h3{font-size:19px;font-weight:500;margin:16px 0 5px}
+.section.media-archive .media-card .media-score{font-size:12px;letter-spacing:1px}
+.profile-section-option{display:flex!important;align-items:center;gap:12px;margin:14px 0;font-size:13px;letter-spacing:.06em}
+.profile-section-option input{width:auto!important;accent-color:var(--ink);margin:0}
+@media(max-width:600px){.section.media-archive .media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.section.media-archive .media-card h3{font-size:15px}}
