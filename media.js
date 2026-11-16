@@ -22,6 +22,7 @@ async function refresh(){
   for(const t of types)state[t]=!!pref?.enabled?.[t];
   items=rows.filter(x=>types.includes(x.type));
   apply();render();
+  for(const entry of items.filter(x=>x.type==='movies'&&!x.poster))fillPoster(entry,true).catch(console.warn);
  }catch(e){$('#media-settings-status').textContent='LOAD FAILED: '+e.message;}
 }
 async function saveSettings(){
@@ -45,10 +46,46 @@ function open(t,entry=null){
  $('#media-visibility').value=entry?.visibility||'public';
  $('#media-poster-upload').value='';$('#media-search-results').replaceChildren();$('#media-search-status').textContent='';$('#media-form-status').textContent='';
  showSelected();editor.showModal();
+ if(t==='movies'&&selected&&!selected.poster){const original=selected;findMoviePoster(selected.title,selected.year).then(poster=>{if(poster&&selected===original){selected={...selected,poster};showSelected();}}).catch(console.warn);}
 }
 document.querySelectorAll('[data-media-add]').forEach(n=>n.onclick=()=>open(n.dataset.mediaAdd));
 $('#media-close').onclick=()=>editor.close();
 $('#media-rating').oninput=()=>$('#media-rating-value').textContent=Number($('#media-rating').value).toFixed(1)+' / 5';
+async function findMoviePoster(title,year=''){
+ const query=title.trim();if(!query)return '';
+ const jobs=['KR','US'].map(async country=>{
+  const url='https://itunes.apple.com/search?'+new URLSearchParams({term:query,media:'movie',entity:'movie',limit:'40',country});
+  const response=await fetch(url);if(!response.ok)return [];
+  const data=await response.json();return (data.results||[]).filter(x=>x.trackName&&x.artworkUrl100);
+ });
+ const normalize=v=>safe(v).toLocaleLowerCase().normalize('NFKC').replace(/[\\s\\p{P}\\p{S}]/gu,'');
+ const results=(await Promise.allSettled(jobs)).filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
+ const exact=results.filter(x=>normalize(x.trackName)===normalize(query));
+ const match=exact.find(x=>!year||x.releaseDate?.startsWith(String(year)))||exact[0];
+ if(match)return match.artworkUrl100.replace(/100x100(?:bb)?/,'600x600bb');
+ for(const lang of (/[가-힣]/.test(query)?['ko','en']:['en','ko'])){
+  try{
+   const params=new URLSearchParams({action:'query',format:'json',formatversion:'2',generator:'search',gsrsearch:query+' '+(lang==='ko'?'영화':'film'),gsrnamespace:'0',gsrlimit:'10',prop:'pageimages|categories|description',piprop:'thumbnail',pithumbsize:'600',cllimit:'15',origin:'*'});
+   const res=await fetch('https://'+lang+'.wikipedia.org/w/api.php?'+params);if(!res.ok)continue;
+   const data=await res.json();
+   const pages=(data.query?.pages||[]).filter(p=>/영화|film|movie|cinema/i.test([p.description,...(p.categories||[]).map(c=>c.title)].join(' ')));
+   const page=pages.find(p=>normalize(p.title.replace(/\\s*\\([^)]*\\)$/,''))===normalize(query)&&p.thumbnail?.source);
+   if(page)return page.thumbnail.source;
+  }catch(e){console.warn('Poster lookup:',e);}
+ }
+ return '';
+}
+async function fillPoster(entry,persist=false){
+ if(entry.poster||entry.type!=='movies')return;
+ const poster=await findMoviePoster(entry.title,entry.year);
+ if(!poster||entry.poster)return;
+ entry.poster=poster;
+ if(persist&&user()){
+  const u=user();const {error}=await cloudClient.from('archive_entries').upsert({id:entry.id,user_id:u.id,entry_data:entry},{onConflict:'id'});
+  if(error)console.warn('Could not save movie poster:',error);
+ }
+ render();
+}
 function showSelected(){
  const box=$('#media-selected');box.replaceChildren();box.hidden=!selected;if(!selected)return;
  const row=node('div','media-result');if(selected.poster){const img=node('img');img.src=selected.poster;img.alt='';row.append(img);}
@@ -130,7 +167,7 @@ async function search(){
   if(kind==='movies'){
    const manual=node('button','media-result','+ "'+q+'" 직접 등록하기 (포스터 없이)');manual.type='button';manual.onclick=()=>{selected={title:q,year:'',poster:'',externalId:'manual-'+Date.now(),subtitle:'MANUAL'};showSelected();results.replaceChildren();status.textContent='제목이 선택됐어요. 아래에서 저장하세요.';};results.append(manual);
   }
-  for(const item of found){const btn=node('button','media-result');btn.type='button';if(item.poster){const img=node('img');img.src=item.poster;img.alt='';btn.append(img);}btn.append(node('span','',item.title+' · '+(item.year||'—')+' '+item.subtitle));btn.onclick=()=>{selected=item;showSelected();results.replaceChildren();status.textContent='SELECTED ✓';};results.append(btn);}
+  for(const item of found){const btn=node('button','media-result');btn.type='button';if(item.poster){const img=node('img');img.src=item.poster;img.alt='';btn.append(img);}btn.append(node('span','',item.title+' · '+(item.year||'—')+' '+item.subtitle));btn.onclick=()=>{selected=item;showSelected();results.replaceChildren();status.textContent='SELECTED ✓';if(kind==='movies'&&!item.poster){findMoviePoster(item.title,item.year).then(poster=>{if(poster&&selected===item){selected={...item,poster};showSelected();}}).catch(console.warn);}};results.append(btn);}
  }catch(e){status.textContent='SEARCH FAILED: '+e.message+' · 제목을 직접 등록할 수 있어요.';if(kind==='movies'){const manual=node('button','media-result','+ "'+q+'" 직접 등록하기');manual.type='button';manual.onclick=()=>{selected={title:q,year:'',poster:'',externalId:'manual-'+Date.now(),subtitle:'MANUAL'};showSelected();results.replaceChildren();status.textContent='제목 선택 완료';};results.append(manual);}}
 }
 $('#media-search-btn').onclick=search;
@@ -139,6 +176,7 @@ form.onsubmit=async e=>{
  e.preventDefault();if(!selected){$('#media-form-status').textContent='검색 결과에서 작품을 선택해 주세요.';return;}
  const u=user();if(!u)return;const btn=$('#media-save');btn.disabled=true;$('#media-form-status').textContent='SAVING...';
  const previous=items.find(x=>x.id===editId);
+ if(kind==='movies'&&!selected.poster){$('#media-form-status').textContent='포스터 검색 중…';try{const poster=await findMoviePoster(selected.title,selected.year);if(poster)selected={...selected,poster};}catch(e){console.warn(e);}}
  const entry={id:editId||crypto.randomUUID(),type:kind,...selected,rating:Number($('#media-rating').value),watchStatus:$('#media-watch-status').value,comment:$('#media-comment').value.trim(),visibility:$('#media-visibility').value,created:previous?.created||Date.now()};
  try{
   const {error}=await cloudClient.from('archive_entries').upsert({id:entry.id,user_id:u.id,entry_data:entry},{onConflict:'id'});if(error)throw error;
