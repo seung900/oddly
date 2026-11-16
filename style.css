@@ -552,3 +552,29 @@ body[data-custom-theme] #music-grid .entry .score *,
 @media(max-width:420px){.places-gallery{grid-template-columns:1fr 1fr}.places-card h4{font-size:15px}}
 
 .places-optional{font-size:10px;color:var(--muted);letter-spacing:1px;margin-left:5px}.places-form-help{font-size:12px;line-height:1.6;color:var(--muted);margin:8px 0 16px}
+
+/* Optional media archives */
+[hidden]{display:none!important}
+.media-controls{padding:20px max(5vw,25px);display:flex;justify-content:flex-end}
+.media-archive .sectionhead{align-items:center}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:26px;margin-top:24px}
+.media-card{min-width:0}
+.media-poster{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--line);display:block;border-radius:3px}
+.media-card h3{font-size:15px;margin:12px 0 5px}
+.media-card small{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.media-score{font-size:13px;margin:8px 0}
+.media-comment{font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.media-actions{display:flex;gap:12px;margin-top:12px}
+.media-actions button{border:0;border-bottom:1px solid var(--ink);background:transparent;color:var(--ink);font-size:10px;padding:5px 0}
+.media-dialog{background:var(--bg);color:var(--ink);border:1px solid var(--line);padding:25px;width:min(520px,94vw);max-height:90vh;overflow:auto}
+.media-dialog::backdrop{background:rgba(0,0,0,.65)}
+.media-dialog label{display:block;margin:15px 0;font-size:12px}
+.media-dialog input:not([type=checkbox]):not([type=range]),.media-dialog select,.media-dialog textarea{display:block;width:100%;margin-top:8px;padding:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.media-dialog input[type=range]{display:block;width:100%}
+.media-dialog input[type=checkbox]{margin-right:10px}
+.media-dialog .save{width:100%}
+#media-search-results{max-height:270px;overflow:auto}
+.media-result{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--line);padding:9px 2px;font-size:12px}
+.media-result img{width:44px;height:65px;object-fit:cover}
+#media-selected:not([hidden]){border:1px solid var(--line);padding:8px}
+@media(max-width:650px){.media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.media-dialog{padding:18px}}
