@@ -7,6 +7,7 @@ const cloudDialog=document.querySelector('#auth-dialog');
 const cloudButton=document.querySelector('#auth-open');
 const ownerKey='seungu-archive-cloud-owner';
 let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
+function cloudLoading(active){document.body.classList.toggle('archive-sync-loading',active);document.querySelector('#archive-loading-status')?.replaceChildren(document.createTextNode(active?'SYNCING YOUR ARCHIVE…':''));}
 function cloudMessage(msg){cloudStatus.textContent=msg;}
 function cloudLocalSave(){try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache unavailable; cloud records remain accessible:',e);}render();}
 function cloudUi(){
@@ -20,7 +21,7 @@ function cloudUi(){
 }
 async function cloudPull(first=false){
  if(!cloudUser||cloudBusy)return;
- cloudBusy=true;
+ cloudBusy=true;cloudLoading(true);
  const userId=cloudUser.id,generation=cloudGeneration;
  try{
   await cloudLastSave;
@@ -40,7 +41,7 @@ async function cloudPull(first=false){
   try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn('Owner cache unavailable:',e);}cloudLocalSave();
   cloudMessage(`동기화 완료! ${entries.length}개 기록.${localOnly.length?' 기존 기록 '+localOnly.length+'개 가져옴.':''}`);
  }catch(e){cloudMessage('동기화 실패: '+(e.message||e));}
- finally{cloudBusy=false;}
+ finally{cloudBusy=false;if(generation===cloudGeneration)cloudLoading(false);}
 }
 function cloudQueueSave(){
  if(!cloudUser)return;
@@ -242,13 +243,13 @@ document.querySelector('#discover-refresh').addEventListener('click',loadPeople)
 if(cloudClient){
  cloudClient.auth.onAuthStateChange((event,session)=>{
   const next=session?.user||null;if(next?.id===cloudUser?.id)return;
-  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;if(localStorage.getItem(ownerKey)&&localStorage.getItem(ownerKey)!==next?.id){entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
-  if(next)setTimeout(()=>cloudPull(true),0);
+  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;cloudLoading(!!next);if(localStorage.getItem(ownerKey)&&localStorage.getItem(ownerKey)!==next?.id){entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
+  if(next)setTimeout(()=>cloudPull(true),0);else cloudLoading(false);
  });
- cloudClient.auth.getSession().then(({data,error})=>{if(error)cloudMessage(error.message);else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>cloudMessage(e.message));
+ cloudClient.auth.getSession().then(({data,error})=>{if(error){cloudMessage(error.message);cloudLoading(false);}else if(!data?.session?.user){cloudLoading(false);}else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudLoading(true);cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>{cloudMessage(e.message);cloudLoading(false);});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cloudUser)cloudPull();});
  window.addEventListener('focus',()=>{if(cloudUser)cloudPull();});
-}else cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+}else {cloudLoading(false);cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
 cloudUi();
 
 // FRIENDS: friendship requests are enforced by Supabase RLS.
