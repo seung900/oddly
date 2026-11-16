@@ -583,3 +583,6 @@ body[data-custom-theme] #music-grid .entry .score *,
 #archive-loading-status{display:none;text-align:center;padding:18px;font-size:11px;letter-spacing:1.6px;color:var(--muted)}
 .archive-sync-loading #archive-loading-status{display:block}
 .archive-sync-loading #music-grid,.archive-sync-loading #eats-grid,.archive-sync-loading #moments-grid,.archive-sync-loading #movies-grid,.archive-sync-loading #anime-grid,.archive-sync-loading #series-grid{visibility:hidden;min-height:110px}
+
+.media-poster-empty{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;background:#ededed;color:#777;font-size:11px;letter-spacing:1px;}
+.media-poster-hint{font-size:11px;opacity:.65;margin-top:0;}
