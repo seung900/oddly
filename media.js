@@ -2,7 +2,7 @@
 (()=>{
 const $=s=>document.querySelector(s),types=['movies','anime','series'];
 const settings=$('#media-settings-dialog'),editor=$('#media-editor'),form=$('#media-form');
-const state={movies:false,anime:false,series:false};let items=[],selected=null,kind='movies',editId=null,seq=0;
+const state={movies:false,anime:false,series:false};let itemsSettingsId=null;let items=[],selected=null,kind='movies',editId=null,seq=0;
 const user=()=>typeof cloudUser!=='undefined'?cloudUser:null;
 const safe=s=>String(s??'');
 const node=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=safe(txt);return n;};
@@ -13,12 +13,12 @@ function apply(){
  }
 }
 async function refresh(){
- const u=user(),token=++seq;items=[];types.forEach(t=>state[t]=false);apply();if(!u){render();return;}
+ const u=user(),token=++seq;if(!u){items=[];itemsSettingsId=null;types.forEach(t=>state[t]=false);apply();render();return;}
  try{
   const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',u.id);
   if(error)throw error;if(token!==seq||user()?.id!==u.id)return;
   const rows=(data||[]).map(x=>x.entry_data).filter(Boolean);
-  const pref=rows.find(x=>x.id==='media-settings-'+u.id);
+  const pref=rows.find(x=>x.type==='media-settings');itemsSettingsId=pref?.id||null;
   for(const t of types)state[t]=!!pref?.enabled?.[t];
   items=rows.filter(x=>types.includes(x.type));
   apply();render();
@@ -26,8 +26,10 @@ async function refresh(){
 }
 async function saveSettings(){
  const u=user();if(!u){$('#media-settings-status').textContent='로그인이 필요해요.';return;}
- const entry={id:'media-settings-'+u.id,type:'media-settings',enabled:{...state},visibility:'private'};
+ const existing=itemsSettingsId;
+ const entry={id:existing||crypto.randomUUID(),type:'media-settings',enabled:{...state},visibility:'private'};
  const {error}=await cloudClient.from('archive_entries').upsert({id:entry.id,user_id:u.id,entry_data:entry},{onConflict:'id'});
+ if(!error)itemsSettingsId=entry.id;
  $('#media-settings-status').textContent=error?'SAVE FAILED: '+error.message:'SAVED ✓';
 }
 $('#media-settings-open').onclick=()=>{if(!user()){alert('로그인 후 섹션을 설정할 수 있어요.');return;}settings.showModal();};
@@ -125,7 +127,8 @@ form.onsubmit=async e=>{
  const entry={id:editId||crypto.randomUUID(),type:kind,...selected,rating:Number($('#media-rating').value),watchStatus:$('#media-watch-status').value,comment:$('#media-comment').value.trim(),visibility:$('#media-visibility').value,created:previous?.created||Date.now()};
  try{
   const {error}=await cloudClient.from('archive_entries').upsert({id:entry.id,user_id:u.id,entry_data:entry},{onConflict:'id'});if(error)throw error;
-  items=items.filter(x=>x.id!==entry.id);items.unshift(entry);render();editor.close();
+  items=items.filter(x=>x.id!==entry.id);items.unshift(entry);state[kind]=true;apply();render();editor.close();
+  await saveSettings();
  }catch(err){$('#media-form-status').textContent='SAVE FAILED: '+err.message;}finally{btn.disabled=false;}
 };
 function render(){
