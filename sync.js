@@ -65,12 +65,23 @@ async function cloudPull(first=false){
    if(!current())return;
    const byId=new Map((data||[]).map(row=>[row.id,row.entry_data]));
    entries=entries.map(e=>byId.has(e.id)?{...e,...byId.get(e.id)}:e);
-   render();
+   // Update only the changed images. Rebuilding all cards on every batch
+   // caused dozens of expensive base64 image decodes on mobile Safari.
+   for(const row of data||[]){
+    const entry=row.entry_data;
+    if(!entry?.image)continue;
+    for(const art of document.querySelectorAll('.art[data-entry-id]')){
+     if(art.dataset.entryId!==row.id)continue;
+     const img=art.querySelector('img');
+     if(img){if(img.getAttribute('src')!==entry.image)img.src=entry.image;}
+     else {const fresh=document.createElement('img');fresh.src=entry.image;fresh.alt=entry.momentTitle||entry.food||entry.album||'';fresh.loading='lazy';fresh.decoding='async';art.replaceChildren(fresh);}
+    }
+   }
   }
   if(!current())return;
   // Never write a partial image-less index to the persistent cache.
   try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn(e);}
-  cloudLocalSave();
+  try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache full',e);}
   cloudMessage('동기화 완료! '+entries.length+'개 기록.');
  }catch(e){
   console.error('Archive sync failed',e);
