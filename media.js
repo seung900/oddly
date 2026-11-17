@@ -15,7 +15,7 @@ function apply(){
 async function refresh(){
  const u=user(),token=++seq;if(!u){items=[];itemsSettingsId=null;types.forEach(t=>state[t]=!['anime','series'].includes(t));apply();render();return;}
  try{
-  const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',u.id);
+  const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',u.id).in('entry_data->>type',['movies','anime','series','media-settings']);
   if(error)throw error;if(token!==seq||user()?.id!==u.id)return;
   const rows=(data||[]).map(x=>x.entry_data).filter(Boolean);
   const pref=rows.find(x=>x.type==='media-settings');itemsSettingsId=pref?.id||null;
