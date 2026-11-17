@@ -622,3 +622,33 @@ body[data-custom-theme="white"] main > :is(#music,#eats,#moments),
   transform:none;box-shadow:none;
 }
 :is(#eats-grid,#friend-eats-grid) .entry{box-shadow:none}
+
+
+/* ODDLY / restrained editorial system, v40 */
+.hero:before,.sectionhead:after{content:none!important;display:none!important}
+.hero{min-height:45vh;padding-top:clamp(65px,9vw,120px);padding-bottom:58px}
+.hero h1{font-family:'DM Sans',Arial,sans-serif!important;font-weight:600!important;letter-spacing:-.09em!important;margin:0 0 70px!important}
+.section{padding-top:clamp(62px,8vw,105px);padding-bottom:clamp(70px,9vw,110px)}
+.sectionhead{border-bottom:1px solid #111!important;padding-bottom:18px;margin-bottom:34px}
+.section h2,.friend-archive-section h4{font-family:'DM Sans',Arial,sans-serif!important;font-weight:500!important;letter-spacing:-.065em!important}
+.sectionhead p{display:none}
+#music-grid .entry .art,#friend-music-grid .entry .art,
+#music-grid .entry:nth-child(3n+2) .art,#music-grid .entry:nth-child(4n+3) .art,
+#friend-music-grid .entry:nth-child(3n+2) .art,#friend-music-grid .entry:nth-child(4n+3) .art{
+ transform:none!important;border:0!important;box-shadow:none!important;
+}
+#music-grid .entry:hover .art,#friend-music-grid .entry:hover .art{box-shadow:none!important}
+#music-grid.album-grid:after,#friend-music-grid.album-grid:after{
+ height:2px!important;background:#111!important;box-shadow:none!important;
+}
+#music-grid .entry:hover,#friend-music-grid .entry:hover{transform:none!important}
+#music-grid .entry,#friend-music-grid .entry{transition:none!important}
+#moments-grid .entry,#friend-moments-grid .entry{padding:0 0 15px!important;border:0!important;box-shadow:none!important}
+#eats-grid .entry,#friend-eats-grid .entry{border-top:0!important;padding-top:0!important}
+#music-search-panel{border-color:#e5e5e5}
+.person-card{box-shadow:none!important;border-color:#e5e5e5!important}
+@media(max-width:650px){
+ .hero{padding-top:65px;padding-bottom:45px}
+ .hero h1{margin-bottom:55px!important}
+ .sectionhead{margin-bottom:26px}
+}
