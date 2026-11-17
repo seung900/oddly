@@ -57,6 +57,7 @@ async function cloudPull(first=false){
   if(generation!==cloudGeneration||cloudUser?.id!==userId)return;
   entries=[...remote,...localOnly].map(e=>({...e,visibility:e.visibility==='public'?'public':'private'})).sort((a,b)=>(b.created||0)-(a.created||0));
   try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn('Owner cache unavailable:',e);}cloudLocalSave();
+  window.dispatchEvent(new CustomEvent('oddly:archive-synced',{detail:{rows:remote}}));
   cloudMessage(`동기화 완료! ${entries.length}개 기록.${localOnly.length?' 기존 기록 '+localOnly.length+'개 가져옴.':''}`);
  }catch(e){cloudMessage('동기화 실패: '+(e.message||e));}
  finally{cloudBusy=false;if(generation===cloudGeneration)cloudLoading(false);}
