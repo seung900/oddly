@@ -9,14 +9,11 @@ const ownerKey='seungu-archive-cloud-owner';
 let cloudUser=null,cloudBusy=false,cloudTimer=null,cloudLastSave=Promise.resolve(),cloudGeneration=0;
 let cloudLoadingTimeout=null;
 function cloudLoading(active){
+ // Never block the archive UI behind a network request.
  clearTimeout(cloudLoadingTimeout);
- document.body.classList.toggle('archive-sync-loading',active);
+ document.body.classList.remove('archive-sync-loading');
  const status=document.querySelector('#archive-loading-status');
- if(status)status.textContent=active?'SYNCING YOUR ARCHIVE…':'';
- if(active)cloudLoadingTimeout=setTimeout(()=>{
-  document.body.classList.remove('archive-sync-loading');
-  if(status)status.textContent='클라우드에서 최신 기록을 불러오는 중이에요…';
- },2200);
+ if(status){status.hidden=true;status.textContent='';}
 }
 function cloudMessage(msg){cloudStatus.textContent=msg;}
 function restoreOwnedCache(userId){
