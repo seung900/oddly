@@ -219,15 +219,28 @@ async function openPerson(person){
  const customization=await cloudClient.from('archive_profiles').select('archive_theme,archive_font,archive_layout').eq('id',profileId).maybeSingle();
  if(!document.body.classList.contains('viewing-friend-archive'))return;
  if(!customization.error)applyCustom(document.querySelector('#public-profile'),{theme:customization.data?.archive_theme,font:customization.data?.archive_font,layout:customization.data?.archive_layout});
- const grids=Object.fromEntries(['music','eats','moments'].map(t=>[t,document.querySelector(`#friend-${t}-grid`)]));
+ const grids=Object.fromEntries(['music','eats','moments','movies','anime','series'].map(t=>[t,document.querySelector(`#friend-${t}-grid`)]));
+ for(const type of ['movies','anime','series']){document.querySelector(`#friend-${type}`).hidden=true;document.querySelector(`[data-friend-media-nav="${type}"]`).hidden=true;}
  for(const grid of Object.values(grids))grid.replaceChildren();
  const {data,error}=await cloudClient.from('archive_entries').select('entry_data').eq('user_id',person.id).eq('entry_data->>visibility','public').order('created_at',{ascending:false}).limit(100);
  if(error){profileText('#discover-status','ERROR: '+error.message);return;}
  profileText('#discover-status',`${data?.length||0} RECORDS`);
  let likeMap=new Map();
  if(data?.length){try{likeMap=await loadCommunityLikes(data.map(r=>r.entry_data?.id).filter(id=>typeof id==='string'));}catch(err){console.warn('Likes unavailable',err);}}
- const counts={music:0,eats:0,moments:0};
+ const counts={music:0,eats:0,moments:0,movies:0,anime:0,series:0};
  for(const row of data||[]){const e=row.entry_data;if(!e||!grids[e.type])continue;counts[e.type]++;
+  if(['movies','anime','series'].includes(e.type)){
+   const card=document.createElement('article');card.className='media-card';
+   if(typeof e.poster==='string'&&(e.poster.startsWith('https://')||e.poster.startsWith('data:image/'))){
+    const img=document.createElement('img');img.className='media-poster';img.src=e.poster;img.alt=(e.title||'')+' poster';img.loading='lazy';img.decoding='async';card.append(img);
+   }else{const placeholder=document.createElement('div');placeholder.className='media-poster media-poster-empty';placeholder.textContent='NO POSTER';card.append(placeholder);}
+   const title=document.createElement('h3');title.textContent=e.title||'UNTITLED';card.append(title);
+   const meta=document.createElement('small');meta.textContent=[e.year,e.watchStatus?.toUpperCase()].filter(Boolean).join(' · ');card.append(meta);
+   const rating=document.createElement('p');rating.className='media-score';rating.textContent='★ '+Number(e.rating||0).toFixed(1)+' / 5';card.append(rating);
+   if(e.comment){const comment=document.createElement('p');comment.className='media-comment';comment.textContent=e.comment;card.append(comment);}
+   if(typeof e.id==='string')card.append(makeCommunityLikeButton(e.id,likeMap.get(e.id)||{count:0,mine:false}));
+   grids[e.type].append(card);continue;
+  }
   const card=document.createElement('article');card.className='entry';const art=document.createElement('div');art.className='art';
   if(typeof e.image==='string'&&(e.image.startsWith('data:image/')||e.image.startsWith('https://'))){const img=document.createElement('img');img.src=e.image;img.alt='';art.append(img);}else{const mark=document.createElement('span');mark.className='placeholder';mark.textContent=e.type==='music'?'♪':'◌';art.append(mark);}
   card.append(art);if(typeof attachArtworkPreview==='function')attachArtworkPreview(art,e);
@@ -240,8 +253,9 @@ async function openPerson(person){
   if(typeof e.id==='string')card.append(makeCommunityLikeButton(e.id,likeMap.get(e.id)||{count:0,mine:false}));
   grids[e.type].append(card);
  }
+ for(const type of ['movies','anime','series']){const visible=counts[type]>0;document.querySelector(`#friend-${type}`).hidden=!visible;document.querySelector(`[data-friend-media-nav="${type}"]`).hidden=!visible;}
  for(const type of Object.keys(grids)){if(!counts[type]){const empty=document.createElement('p');empty.className='friend-empty';empty.textContent='NO RECORDS';grids[type].append(empty);}}
- for(const type of ['eats','moments'])setupFriendArchivePages(grids[type]);
+ for(const type of ['eats','moments','movies','anime','series'])setupFriendArchivePages(grids[type]);
 }
 function setupFriendArchivePages(grid){
  const cards=[...grid.querySelectorAll(':scope > .entry')];
