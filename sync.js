@@ -99,7 +99,7 @@ function cloudRemoveEntry(id){
   if(error)throw error;
  }).catch(e=>cloudMessage('클라우드 삭제 실패: '+(e.message||e)));
 }
-window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser};
+window.archiveCloud={queueSave:cloudQueueSave,removeEntry:cloudRemoveEntry,isSignedIn:()=>!!cloudUser,isLoading:()=>cloudBusy};
 cloudButton.addEventListener('click',()=>cloudDialog.showModal());
 document.querySelector('#auth-close').addEventListener('click',()=>cloudDialog.close());
 async function cloudAuth(action){
