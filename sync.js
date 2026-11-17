@@ -257,10 +257,8 @@ if(cloudClient){
   if(next)setTimeout(()=>cloudPull(true),0);else cloudLoading(false);
  });
  cloudClient.auth.getSession().then(({data,error})=>{if(error){cloudMessage(error.message);cloudLoading(false);}else if(!data?.session?.user){cloudLoading(false);}else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudLoading(true);cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>{cloudMessage(e.message);cloudLoading(false);});
- let lastResumePull=0;
- function refreshOnResume(){if(!cloudUser||cloudBusy||Date.now()-lastResumePull<45000)return;lastResumePull=Date.now();cloudPull();}
- document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshOnResume();});
- window.addEventListener('focus',refreshOnResume);
+ // Keep the existing archive visible when returning from another browser tab.
+ // A full page reload or the refresh control fetches the latest records.
 }else {cloudLoading(false);cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');}
 cloudUi();
 
