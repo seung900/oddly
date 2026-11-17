@@ -38,29 +38,44 @@ function cloudUi(){
 async function cloudPull(first=false){
  if(!cloudUser||cloudBusy)return;
  cloudBusy=true;
- // Keep a verified account-specific cache visible while the latest cloud records arrive.
- if(localStorage.getItem(ownerKey)!==cloudUser.id||!localStorage.getItem(KEY))cloudLoading(true);
  const userId=cloudUser.id,generation=cloudGeneration;
+ const current=()=>generation===cloudGeneration&&cloudUser?.id===userId;
  try{
   await cloudLastSave;
-  const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId);
-  if(error)throw error;
-  if(generation!==cloudGeneration||cloudUser?.id!==userId)return;
-  const remote=(data||[]).map(x=>x.entry_data).filter(x=>x&&typeof x.id==='string');
+  // Fetch a lightweight index first. The previous all-at-once query transferred
+  // megabytes of embedded images before showing a single recent entry.
+  const {data:index,error:indexError}=await cloudClient.rpc('oddly_archive_index');
+  if(indexError)throw indexError;
+  if(!current())return;
+  const records=(index||[]).map(r=>r.entry_data).filter(e=>e&&typeof e.id==='string'&&['music','eats','moments'].includes(e.type));
+  const existing=new Map(entries.map(e=>[e.id,e]));
   const owner=localStorage.getItem(ownerKey);
-  // Only import legacy local records if they have no associated account AND the user approves.
-  let localOnly=[];
-  if(first&&!owner&&entries.length&&confirm(`이 브라우저의 기존 기록 ${entries.length}개를 현재 계정으로 가져올까요?\n다른 사람의 기록이라면 취소하세요.`)){
-   localOnly=entries.filter(e=>!remote.some(r=>r.id===e.id)).map(e=>({...e,visibility:'private'}));
-   if(localOnly.length){const {error:upErr}=await cloudClient.from('archive_entries').upsert(localOnly.map(e=>({id:e.id,user_id:userId,entry_data:e})),{onConflict:'id'});if(upErr)throw upErr;}
+  const next=records.map(e=>{
+   const old=owner===userId?existing.get(e.id):null;
+   return {...e,...(old?.image?{image:old.image}:{})};
+  }).sort((a,b)=>(b.created||0)-(a.created||0));
+  entries=next;render();
+  // Load image-bearing records in small batches, most recent first.
+  // Preserve the existing images until each batch completes.
+  for(let offset=0;offset<records.length;offset+=8){
+   if(!current())return;
+   const ids=records.slice(offset,offset+8).map(e=>e.id);
+   const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId).in('id',ids);
+   if(error)throw error;
+   if(!current())return;
+   const byId=new Map((data||[]).map(row=>[row.id,row.entry_data]));
+   entries=entries.map(e=>byId.has(e.id)?{...e,...byId.get(e.id)}:e);
+   render();
   }
-  if(generation!==cloudGeneration||cloudUser?.id!==userId)return;
-  entries=[...remote,...localOnly].map(e=>({...e,visibility:e.visibility==='public'?'public':'private'})).sort((a,b)=>(b.created||0)-(a.created||0));
-  try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn('Owner cache unavailable:',e);}cloudLocalSave();
-  window.dispatchEvent(new CustomEvent('oddly:archive-synced',{detail:{rows:remote}}));
-  cloudMessage(`동기화 완료! ${entries.length}개 기록.${localOnly.length?' 기존 기록 '+localOnly.length+'개 가져옴.':''}`);
- }catch(e){cloudMessage('동기화 실패: '+(e.message||e));}
- finally{cloudBusy=false;if(generation===cloudGeneration)cloudLoading(false);}
+  if(!current())return;
+  // Never write a partial image-less index to the persistent cache.
+  try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn(e);}
+  cloudLocalSave();
+  cloudMessage('동기화 완료! '+entries.length+'개 기록.');
+ }catch(e){
+  console.error('Archive sync failed',e);
+  cloudMessage('기록을 불러오지 못했어요: '+(e.message||e));
+ }finally{cloudBusy=false;if(current())cloudLoading(false);}
 }
 function cloudQueueSave(){
  if(!cloudUser)return;
