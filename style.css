@@ -595,3 +595,30 @@ body[data-custom-theme] #music-grid .entry .score *,
 .profile-section-option{display:flex!important;align-items:center;gap:12px;margin:14px 0;font-size:13px;letter-spacing:.06em}
 .profile-section-option input{width:auto!important;accent-color:var(--ink);margin:0}
 @media(max-width:600px){.section.media-archive .media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.section.media-archive .media-card h3{font-size:15px}}
+
+
+/* ODDLY clean-white editorial finish: no ivory paper tint or decorative card effects. */
+:root{--bg:#ffffff;--white:#ffffff;--ink:#111111;--muted:#666666;--line:#e5e5e5}
+html,body{background:#ffffff!important;background-image:none!important}
+header{background:#ffffff!important;border-bottom-color:#e5e5e5}
+.indexline,.end,#music-search-panel,.search-result,.person-card{background:#ffffff}
+dialog,#artwork-dialog,.places-dialog,.media-dialog{background:#ffffff}
+.places-map{background:#f7f7f7}
+.places-region{fill:#d4d4d4;stroke:#ffffff}
+.places-region.visited{fill:#444444}
+body[data-custom-theme="white"] main > :is(#music,#eats,#moments),
+#public-profile[data-custom-theme="white"],
+#custom-preview[data-custom-theme="white"]{
+  --theme-bg:#ffffff;--theme-card:#ffffff;--theme-ink:#111111;
+  --theme-muted:#666666;--theme-line:#e5e5e5;
+}
+:is(#moments-grid,#friend-moments-grid) .entry,
+:is(#moments-grid,#friend-moments-grid) .entry:nth-child(4n+2),
+:is(#moments-grid,#friend-moments-grid) .entry:nth-child(4n+3){
+  transform:none;box-shadow:none;border-color:#e5e5e5;background:#ffffff;
+}
+:is(#moments-grid,#friend-moments-grid) .entry:hover,
+:is(#moments-grid,#friend-moments-grid) .entry:focus-within{
+  transform:none;box-shadow:none;
+}
+:is(#eats-grid,#friend-eats-grid) .entry{box-shadow:none}
