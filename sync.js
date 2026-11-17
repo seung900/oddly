@@ -57,11 +57,12 @@ async function cloudPull(first=false){
   entries=next;render();
   // Load image-bearing records in small batches, most recent first.
   // Preserve the existing images until each batch completes.
-  for(let offset=0;offset<records.length;offset+=8){
+  for(let offset=0;offset<records.length;offset+=24){
    if(!current())return;
-   const ids=records.slice(offset,offset+8).map(e=>e.id);
-   const {data,error}=await cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId).in('id',ids);
-   if(error)throw error;
+   const groups=[0,8,16].map(i=>records.slice(offset+i,offset+i+8).map(e=>e.id)).filter(ids=>ids.length);
+   const results=await Promise.all(groups.map(ids=>cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId).in('id',ids)));
+   const failure=results.find(result=>result.error);if(failure)throw failure.error;
+   const data=results.flatMap(result=>result.data||[]);
    if(!current())return;
    const byId=new Map((data||[]).map(row=>[row.id,row.entry_data]));
    entries=entries.map(e=>byId.has(e.id)?{...e,...byId.get(e.id)}:e);
