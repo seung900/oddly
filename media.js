@@ -192,7 +192,7 @@ function render(){
   if(!subset.length){grid.append(node('p','media-empty','아직 등록된 작품이 없어요.'));continue;}
   for(const x of subset){
    const card=node('article','media-card');
-   if(x.poster){const img=node('img','media-poster');img.src=x.poster;img.alt=x.title+' poster';img.loading='lazy';img.onerror=()=>{img.replaceWith(node('div','media-poster media-poster-empty','NO POSTER'));};card.append(img);}else card.append(node('div','media-poster media-poster-empty','NO POSTER'));
+   if(x.poster){const img=node('img','media-poster');img.src=x.poster;img.alt=x.title+' poster';img.loading='lazy';img.decoding='async';img.onerror=()=>{img.replaceWith(node('div','media-poster media-poster-empty','NO POSTER'));};card.append(img);}else card.append(node('div','media-poster media-poster-empty','NO POSTER'));
    card.append(node('h3','',x.title));card.append(node('small','',x.year+' · '+x.watchStatus.toUpperCase()));
    card.append(node('p','media-score','★ '+Number(x.rating||0).toFixed(1)+' / 5'));
    if(x.comment)card.append(node('p','media-comment',x.comment));
