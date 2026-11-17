@@ -652,3 +652,59 @@ body[data-custom-theme="white"] main > :is(#music,#eats,#moments),
  .hero h1{margin-bottom:55px!important}
  .sectionhead{margin-bottom:26px}
 }
+
+
+/* ODDLY / polished responsive navigation and content rhythm */
+:root{font-synthesis:none}
+body{font-size:14px;-webkit-font-smoothing:antialiased}
+header{gap:14px 26px!important;padding:21px max(4vw,24px)!important;align-items:center}
+header .logo{font-size:22px;font-weight:700;letter-spacing:-.075em;white-space:nowrap}
+header nav{gap:clamp(12px,1.7vw,28px);font-size:10px;letter-spacing:.09em}
+header nav a{padding:8px 0;white-space:nowrap}
+header .outline{padding:10px 12px;border-color:#d7d7d7;font-size:10px;letter-spacing:.025em}
+header #add{background:#111;color:#fff;border-color:#111}
+header #add:hover{background:#333}
+.hero,.section,footer{padding-left:max(4vw,24px);padding-right:max(4vw,24px)}
+.hero{min-height:0;padding-top:clamp(65px,9vw,115px);padding-bottom:55px}
+.hero h1{font-size:clamp(72px,13vw,200px)!important;line-height:.9!important}
+.herofoot{border-top:1px solid #111;padding-top:16px}
+.herofoot span{font-size:10px;letter-spacing:.075em}
+.section h2{font-size:clamp(44px,6.5vw,88px);line-height:1;letter-spacing:-.065em}
+.sectionhead .textbutton{font-size:10px;white-space:nowrap;letter-spacing:.04em}
+.entry h3{font-size:16px;font-weight:600;letter-spacing:-.025em;line-height:1.35}
+.entry .sub{font-size:11px;line-height:1.5}
+.entry .comment{font-size:12px;line-height:1.65}
+.entry .privacy-row{font-size:10px;color:#777}
+.entry .privacy-toggle{font-size:10px;border-color:#ddd}
+.entry .delete,.entry .edit-entry,.entry .save-photo-view{font-size:10px!important}
+#music-grid.album-grid,#friend-music-grid.album-grid{gap:20px!important;padding:10px 0 22px!important}
+#music-grid.album-grid:after,#friend-music-grid.album-grid:after{display:none!important}
+#music-grid .entry,#friend-music-grid .entry{flex:0 0 clamp(160px,17vw,230px)!important;width:clamp(160px,17vw,230px)!important;margin-left:0!important;scroll-snap-align:start}
+#music-grid .entry > :not(.art),#friend-music-grid .entry > :not(.art){margin-right:0!important}
+#music-grid .entry .art,#friend-music-grid .entry .art{aspect-ratio:1!important}
+#music-grid .entry .art img,#friend-music-grid .entry .art img{width:100%;height:100%;object-fit:cover}
+#eats-grid .entry .art,#moments-grid .entry .art,#friend-eats-grid .entry .art,#friend-moments-grid .entry .art{background:#f3f3f3}
+#eats-grid .entry h3,#moments-grid .entry h3{margin-top:13px}
+.empty{background:#fff;border:1px solid #e5e5e5;padding:55px 15px;color:#777}
+@media(max-width:900px){
+ header{gap:10px 15px!important}
+ header nav{order:3;flex:0 0 100%;width:100%;overflow-x:auto;justify-content:flex-start;flex-wrap:nowrap;scrollbar-width:none;border-top:1px solid #eee;padding-top:8px}
+ header nav::-webkit-scrollbar{display:none}
+ header #auth-open{margin-left:auto}
+}
+@media(max-width:650px){
+ header{padding:14px 18px!important}
+ header .logo{font-size:21px}
+ header .outline{padding:8px 9px;font-size:9px}
+ header #app-refresh{display:none}
+ .hero,.section,footer{padding-left:18px;padding-right:18px}
+ .hero{padding-top:70px;padding-bottom:36px}
+ .hero h1{font-size:clamp(70px,17vw,125px)!important;margin-bottom:48px!important}
+ .herofoot{flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
+ .section{padding-top:62px;padding-bottom:72px}
+ .section h2{font-size:clamp(43px,11vw,68px)}
+ .sectionhead{flex-direction:row;align-items:end;gap:12px}
+ .sectionhead .textbutton{font-size:9px}
+ #music-grid .entry,#friend-music-grid .entry{flex-basis:155px!important;width:155px!important}
+ #music-grid.album-grid,#friend-music-grid.album-grid{gap:13px!important}
+}
