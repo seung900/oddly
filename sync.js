@@ -19,6 +19,15 @@ function cloudLoading(active){
  },2200);
 }
 function cloudMessage(msg){cloudStatus.textContent=msg;}
+function restoreOwnedCache(userId){
+ try{
+  if(localStorage.getItem(ownerKey)!==userId)return false;
+  const cached=JSON.parse(localStorage.getItem(KEY)||'[]');
+  if(!Array.isArray(cached))return false;
+  entries=cached.filter(e=>e&&typeof e.id==='string'&&['music','eats','moments'].includes(e.type));
+  return true;
+ }catch(e){console.warn('Archive cache unavailable:',e);return false;}
+}
 function cloudLocalSave(){try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache unavailable; cloud records remain accessible:',e);}render();}
 function cloudUi(){
  document.querySelector('#auth-logged-out').hidden=!!cloudUser;
@@ -31,7 +40,9 @@ function cloudUi(){
 }
 async function cloudPull(first=false){
  if(!cloudUser||cloudBusy)return;
- cloudBusy=true;cloudLoading(true);
+ cloudBusy=true;
+ // Keep a verified account-specific cache visible while the latest cloud records arrive.
+ if(localStorage.getItem(ownerKey)!==cloudUser.id||!localStorage.getItem(KEY))cloudLoading(true);
  const userId=cloudUser.id,generation=cloudGeneration;
  try{
   await cloudLastSave;
@@ -253,10 +264,16 @@ document.querySelector('#discover-refresh').addEventListener('click',loadPeople)
 if(cloudClient){
  cloudClient.auth.onAuthStateChange((event,session)=>{
   const next=session?.user||null;if(next?.id===cloudUser?.id)return;
-  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;cloudLoading(!!next);if(localStorage.getItem(ownerKey)&&localStorage.getItem(ownerKey)!==next?.id){entries=[];cloudLocalSave();}cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
+  clearTimeout(cloudTimer);cloudGeneration++;cloudUser=next;
+  const cached=next?restoreOwnedCache(next.id):false;
+  if(!cached){entries=[];render();}
+  cloudLoading(!!next&&!cached);cloudUi();clearDiscovery();loadFriends();loadOwnCustom();
   if(next)setTimeout(()=>cloudPull(true),0);else cloudLoading(false);
  });
- cloudClient.auth.getSession().then(({data,error})=>{if(error){cloudMessage(error.message);cloudLoading(false);}else if(!data?.session?.user){cloudLoading(false);}else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;cloudLoading(true);cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>{cloudMessage(e.message);cloudLoading(false);});
+ cloudClient.auth.getSession().then(({data,error})=>{if(error){cloudMessage(error.message);cloudLoading(false);}else if(!data?.session?.user){cloudLoading(false);}else if(data?.session?.user&&!cloudUser){cloudUser=data.session.user;cloudGeneration++;
+   const cached=restoreOwnedCache(cloudUser.id);
+   if(!cached){entries=[];render();}
+   cloudLoading(!cached);cloudUi();cloudPull(true);loadFriends();loadOwnCustom();}}).catch(e=>{cloudMessage(e.message);cloudLoading(false);});
  // Keep the existing archive visible when returning from another browser tab.
  // A full page reload or the refresh control fetches the latest records.
 }else {cloudLoading(false);cloudMessage('연결 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');}
