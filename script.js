@@ -193,7 +193,16 @@ function attachArtworkPreview(art,entry){
  button.setAttribute('aria-label',entry.type==='music'?'앨범 상세 정보 보기':'사진 크게 보기');
  button.title=entry.type==='music'?'앨범 상세 정보':'원본 비율로 사진 보기';
  art.append(button);
- button.addEventListener('click',()=>openArtworkPreview(entry));
+ // Attach the tap to the artwork itself as well as its overlay: mobile Safari
+ // can lose the overlay click inside horizontally scrolling galleries.
+ const show=event=>{
+  event.preventDefault();
+  event.stopPropagation();
+  const latest=entries.find(item=>item.id===entry.id)||entry;
+  openArtworkPreview(latest);
+ };
+ art.addEventListener('click',show);
+ button.addEventListener('click',show);
 }
 function addPreviewText(parent,tag,cls,value){if(!value)return;const el=document.createElement(tag);el.className=cls;el.textContent=value;parent.append(el);}
 async function savePhotoView(e){
