@@ -735,3 +735,65 @@ header #add:hover{background:#333}
  .hero h1{font-size:clamp(62px,13vw,95px)!important}
  #music-grid.album-grid:after,#friend-music-grid.album-grid:after{top:168px}
 }
+
+
+/* EATS ONLY — pinned white receipt tickets. Other sections unchanged. */
+#eats-grid.food-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:34px 22px!important;align-items:start!important;overflow:visible!important;padding:20px 8px 24px!important}
+#eats-grid .entry{
+ --pin:#cf4d42;
+ position:relative!important;isolation:isolate;
+ width:100%!important;min-width:0!important;margin:0!important;
+ padding:40px 17px 28px!important;box-sizing:border-box!important;
+ border:0!important;border-radius:0!important;
+ background:#fff!important;color:#111!important;
+ box-shadow:0 5px 15px #00000020,0 1px 2px #00000016!important;
+ transform:none!important;overflow:visible!important;
+ font-family:"Courier New",Courier,monospace!important;
+ text-align:left!important;
+ clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),97% 100%,94% calc(100% - 9px),91% 100%,88% calc(100% - 9px),85% 100%,82% calc(100% - 9px),79% 100%,76% calc(100% - 9px),73% 100%,70% calc(100% - 9px),67% 100%,64% calc(100% - 9px),61% 100%,58% calc(100% - 9px),55% 100%,52% calc(100% - 9px),49% 100%,46% calc(100% - 9px),43% 100%,40% calc(100% - 9px),37% 100%,34% calc(100% - 9px),31% 100%,28% calc(100% - 9px),25% 100%,22% calc(100% - 9px),19% 100%,16% calc(100% - 9px),13% 100%,10% calc(100% - 9px),7% 100%,4% calc(100% - 9px),0 100%);
+}
+#eats-grid .entry:nth-child(5n+2){--pin:#5e87ae}
+#eats-grid .entry:nth-child(5n+3){--pin:#e2a33e}
+#eats-grid .entry:nth-child(5n+4){--pin:#648c69}
+#eats-grid .entry:nth-child(5n+5){--pin:#9b7caa}
+#eats-grid .entry:before{
+ content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+ width:15px;height:15px;border-radius:50%;z-index:9;
+ background:radial-gradient(circle at 32% 27%,#ffffffa6 0 12%,transparent 24%),var(--pin);
+ border:1px solid #0004;box-shadow:1px 3px 3px #0004,0 0 0 3px #00000009;
+ pointer-events:none;
+}
+#eats-grid .entry:after{
+ content:"ODDLY / FOOD RECEIPT";display:block;position:absolute;top:29px;left:17px;right:17px;
+ padding-bottom:5px;border-bottom:1px dashed #555;
+ font:700 10px/1.2 "Courier New",monospace;letter-spacing:.6px;text-align:center;color:#111;
+ pointer-events:none;
+}
+#eats-grid .entry .art{margin-top:18px!important;width:100%!important;aspect-ratio:4/3!important;height:auto!important;background:#f2f2f2!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}
+#eats-grid .entry .art img{width:100%!important;height:100%!important;object-fit:cover!important;filter:none!important}
+#eats-grid .entry .artwork-trigger{z-index:6!important;pointer-events:auto!important}
+#eats-grid .entry h3{font:900 clamp(15px,1.6vw,20px)/1.25 "Courier New",monospace!important;letter-spacing:-.6px!important;text-transform:none!important;margin:14px 0 7px!important;padding:0!important;border:0!important;overflow-wrap:anywhere}
+#eats-grid .entry .sub{font:12px/1.5 "Courier New",monospace!important;min-height:0!important;color:#333!important;margin:0 0 12px!important;overflow-wrap:anywhere}
+#eats-grid .entry .score{font:700 12px/1.4 "Courier New",monospace!important;color:#111!important;border-top:1px dashed #555!important;border-bottom:1px dashed #555!important;padding:9px 0!important;margin:9px 0!important}
+#eats-grid .entry .comment{font:12px/1.5 "Courier New",monospace!important;color:#333!important;overflow-wrap:anywhere}
+#eats-grid .entry .privacy-row{font:10px/1.4 "Courier New",monospace!important;border-top:1px dotted #777!important;padding-top:10px!important;margin-top:12px!important}
+#eats-grid .entry .privacy-row button,#eats-grid .entry .edit-entry,#eats-grid .entry .save-photo-view,#eats-grid .entry .delete{font:700 10px/1.4 "Courier New",monospace!important;letter-spacing:0!important}
+#eats-grid .entry .delete{margin-bottom:46px!important}
+#eats-grid .entry .delete:after{
+ content:"";display:block;position:absolute;left:19%;right:19%;bottom:30px;height:28px;
+ background:repeating-linear-gradient(90deg,#111 0 2px,transparent 2px 4px,#111 4px 5px,transparent 5px 8px,#111 8px 12px,transparent 12px 15px,#111 15px 16px,transparent 16px 19px);
+ pointer-events:none;
+}
+@media(max-width:900px){
+ #eats-grid.food-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px 13px!important;padding:18px 4px 20px!important;grid-auto-flow:row!important;overflow:visible!important}
+ #eats-grid .entry{padding:38px 12px 25px!important}
+ #eats-grid .entry:after{left:12px;right:12px;font-size:9px}
+ #eats-grid .entry h3{font-size:15px!important}
+ #eats-grid .entry .sub{font-size:11px!important}
+}
+@media(max-width:420px){
+ #eats-grid.food-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:22px 10px!important}
+ #eats-grid .entry{padding-left:9px!important;padding-right:9px!important}
+ #eats-grid .entry:after{left:9px;right:9px;font-size:8px}
+ #eats-grid .entry .delete:after{left:14%;right:14%}
+}
