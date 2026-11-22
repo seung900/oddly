@@ -139,7 +139,7 @@ function cloudQueueSave(){
   const snapshot=entries.map(e=>({...e,visibility:e.visibility==='public'?'public':'private'}));
   cloudLastSave=cloudLastSave.catch(()=>{}).then(async()=>{
    if(!cloudUser||cloudUser.id!==userId||generation!==cloudGeneration||!snapshot.length)return;
-   const {error}=await cloudClient.from('archive_entries').upsert(snapshot.map(e=>({id:e.id,user_id:userId,entry_data:e})),{onConflict:'id'});
+   const {error}=await cloudClient.rpc('oddly_save_archive_entries',{p_entries:snapshot});
    if(error)throw error;cloudMessage('클라우드에 저장됐어요 ✓');
   }).catch(e=>cloudMessage('클라우드 저장 실패: '+(e.message||e)+'\nBACKUP으로 기록을 보관해 주세요.'));
  },350);
