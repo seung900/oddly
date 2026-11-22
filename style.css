@@ -813,3 +813,6 @@ footer:after{content:"||||| || ||||| ||| || |||||||  0 0 0 1";display:block;font
  .section h2{font-size:35px!important}
 }
 @media(prefers-reduced-motion:reduce){.entry .art img{transition:none!important}}
+
+/* Printed barcode footer: deterministic bars, no image or font dependency. */
+footer:after{content:"0  241107  001826"!important;display:block!important;flex:0 0 200px!important;height:58px!important;padding-top:42px!important;text-align:center!important;font:10px "Courier New",monospace!important;letter-spacing:3px!important;background:repeating-linear-gradient(90deg,#111 0 2px,transparent 2px 4px,#111 4px 5px,transparent 5px 8px,#111 8px 12px,transparent 12px 15px,#111 15px 16px,transparent 16px 19px) top left/100% 38px no-repeat!important}
