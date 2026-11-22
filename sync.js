@@ -55,27 +55,39 @@ async function cloudPull(first=false){
    return {...e,...(old?.image?{image:old.image}:{})};
   }).sort((a,b)=>(b.created||0)-(a.created||0));
   entries=next;render();
-  // Load image-bearing records in small batches, most recent first.
-  // Preserve the existing images until each batch completes.
-  for(let offset=0;offset<records.length;offset+=24){
+  // Load visible/latest records first, then the rest in small requests.
+  // Large base64 payloads decoded concurrently can stall mobile Safari.
+  const priority=new Set();
+  for(const type of ['music','eats','moments']){
+   const visible=entries.filter(e=>e.type===type).slice(0,type==='moments'?6:8);
+   for(const entry of visible)priority.add(entry.id);
+  }
+  const ordered=[...records.filter(e=>priority.has(e.id)),...records.filter(e=>!priority.has(e.id))];
+  for(let offset=0;offset<ordered.length;offset+=8){
    if(!current())return;
-   const groups=[0,8,16].map(i=>records.slice(offset+i,offset+i+8).map(e=>e.id)).filter(ids=>ids.length);
-   const results=await Promise.all(groups.map(ids=>cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId).in('id',ids)));
+   const groups=[ordered.slice(offset,offset+4),ordered.slice(offset+4,offset+8)].filter(group=>group.length);
+   const results=await Promise.all(groups.map(group=>cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId).in('id',group.map(e=>e.id))));
    const failure=results.find(result=>result.error);if(failure)throw failure.error;
-   const data=results.flatMap(result=>result.data||[]);
    if(!current())return;
-   const byId=new Map((data||[]).map(row=>[row.id,row.entry_data]));
+   const data=results.flatMap(result=>result.data||[]);
+   const byId=new Map(data.map(row=>[row.id,row.entry_data]));
    entries=entries.map(e=>byId.has(e.id)?{...e,...byId.get(e.id)}:e);
-   // Update only the changed images. Rebuilding all cards on every batch
-   // caused dozens of expensive base64 image decodes on mobile Safari.
-   for(const row of data||[]){
+   for(const row of data){
     const entry=row.entry_data;
     if(!entry?.image)continue;
     for(const art of document.querySelectorAll('.art[data-entry-id]')){
      if(art.dataset.entryId!==row.id)continue;
      const img=art.querySelector('img');
      if(img){if(img.getAttribute('src')!==entry.image)img.src=entry.image;}
-     else {const fresh=document.createElement('img');fresh.src=entry.image;fresh.alt=entry.momentTitle||entry.food||entry.album||'';fresh.loading='lazy';fresh.decoding='async';art.replaceChildren(fresh);}
+     else {
+      const fresh=document.createElement('img');
+      fresh.src=entry.image;
+      fresh.alt=entry.momentTitle||entry.food||entry.album||'';
+      fresh.loading='lazy';fresh.decoding='async';
+      const placeholder=art.querySelector('.placeholder');
+      if(placeholder)placeholder.replaceWith(fresh);
+      else art.prepend(fresh);
+     }
     }
    }
   }
