@@ -836,3 +836,33 @@ header #add:hover{background:#333}
  #eats-grid .entry:nth-child(even){--tilt:2.3deg}
  #eats-grid.food-grid{column-gap:18px!important;row-gap:29px!important;padding-left:9px!important;padding-right:9px!important}
 }
+
+
+/* EATS receipt strip — one row like MOMENTS, five visible on wide desktop. */
+#eats-grid.food-grid{
+ display:flex!important;flex-wrap:nowrap!important;
+ grid-template-columns:none!important;grid-auto-flow:initial!important;
+ align-items:flex-start!important;justify-content:flex-start!important;
+ gap:clamp(13px,1.8vw,22px)!important;
+ overflow-x:auto!important;overflow-y:hidden!important;
+ scroll-snap-type:x proximity!important;overscroll-behavior-x:contain!important;
+ -webkit-overflow-scrolling:touch!important;
+ padding:25px 14px 38px!important;
+ scrollbar-width:thin!important;
+}
+#eats-grid.food-grid>.entry{
+ flex:0 0 calc((100% - 4 * clamp(13px,1.8vw,22px) - 28px)/5)!important;
+ width:calc((100% - 4 * clamp(13px,1.8vw,22px) - 28px)/5)!important;
+ max-width:none!important;min-width:0!important;
+ scroll-snap-align:start!important;
+}
+@media(min-width:901px) and (max-width:1180px){
+ #eats-grid.food-grid>.entry{flex-basis:calc((100% - 3 * 18px - 28px)/4)!important;width:calc((100% - 3 * 18px - 28px)/4)!important}
+}
+@media(min-width:651px) and (max-width:900px){
+ #eats-grid.food-grid>.entry{flex-basis:calc((100% - 2 * 18px - 28px)/3)!important;width:calc((100% - 2 * 18px - 28px)/3)!important}
+}
+@media(max-width:650px){
+ #eats-grid.food-grid{gap:16px!important;padding:22px 12px 34px!important}
+ #eats-grid.food-grid>.entry{flex:0 0 min(66vw,245px)!important;width:min(66vw,245px)!important}
+}
