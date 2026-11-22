@@ -735,3 +735,81 @@ header #add:hover{background:#333}
  .hero h1{font-size:clamp(62px,13vw,95px)!important}
  #music-grid.album-grid:after,#friend-music-grid.album-grid:after{top:168px}
 }
+
+
+/* ODDLY / THERMAL RECEIPT EDITION — 2026-11-22
+   A deliberate single-column paper-ticket system, not a recolored gallery.
+   Keep all archive, navigation, dialogs and tap targets operational. */
+:root{--bg:#d8d8d5!important;--white:#fffefa!important;--ink:#111!important;--muted:#555!important;--line:#333!important}
+html{background:#d8d8d5!important}
+body{max-width:1120px!important;margin:28px auto 70px!important;background:#fffefa!important;color:#111!important;font-family:"Courier New",Courier,monospace!important;font-size:13px!important;line-height:1.45!important;box-shadow:0 10px 0 #00000012,0 24px 70px #00000023!important;position:relative;overflow-x:clip}
+body:before{content:"";position:absolute;inset:0;z-index:20;pointer-events:none;opacity:.17;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.19'/%3E%3C/svg%3E");background-size:180px}
+body:after{content:"";position:absolute;left:0;right:0;bottom:-13px;height:14px;background:linear-gradient(135deg,#fffefa 25%,transparent 25%) -9px 0/18px 18px,linear-gradient(225deg,#fffefa 25%,transparent 25%) -9px 0/18px 18px;pointer-events:none}
+body,body *,button,input,textarea,select{font-family:"Courier New",Courier,monospace!important}
+header{position:relative!important;background:#fffefa!important;border-bottom:2px dashed #111!important;padding:25px 42px!important;gap:15px!important}
+header:before{content:"ODDLY PRINTING CO.   /   ISSUE NO. 001";position:absolute;top:7px;left:42px;font-size:9px;letter-spacing:1.4px}
+header .logo{font-size:28px!important;font-weight:900!important;letter-spacing:-2px!important}
+header nav{gap:16px!important}
+header nav a{font-size:11px!important;letter-spacing:0!important;font-weight:700!important}
+header .outline,.textbutton,.footerbtn,.save{border:1px solid #111!important;background:transparent!important;color:#111!important;border-radius:0!important;box-shadow:3px 3px 0 #111!important;font-weight:700!important;letter-spacing:0!important;text-transform:uppercase}
+header .outline:hover,.textbutton:hover,.footerbtn:hover,.save:hover{background:#111!important;color:#fff!important;opacity:1!important}
+.hero{padding:52px 44px 48px!important;min-height:0!important;border-bottom:2px dashed #111!important;text-align:center!important;position:relative}
+.hero:before{content:"* * *   YOUR PERSONAL TASTE RECEIPT   * * *"!important;display:block!important;position:static!important;font-size:11px!important;letter-spacing:1px!important;color:#111!important;background:none!important;margin:0 auto 25px!important}
+.hero h1{font-family:"Courier New",Courier,monospace!important;font-size:clamp(68px,13vw,166px)!important;font-weight:900!important;line-height:1!important;letter-spacing:-.09em!important;margin:0 auto 25px!important;overflow-wrap:anywhere}
+.hero .period,.period{color:#111!important}
+.herofoot{border-top:2px dotted #111!important;padding-top:14px!important;display:flex!important;justify-content:space-between!important;flex-direction:row!important;text-align:left!important}
+.herofoot span{font-size:10px!important;letter-spacing:0!important}
+.section{padding:48px 44px 60px!important;border-bottom:2px dashed #111!important;scroll-margin-top:10px!important;background:transparent!important}
+.sectionhead{border-bottom:2px dotted #111!important;padding-bottom:15px!important;margin-bottom:22px!important;align-items:end!important}
+.sectionhead:after{display:none!important}
+.section h2,.sectionhead h2{font-family:"Courier New",Courier,monospace!important;font-size:clamp(36px,6vw,67px)!important;line-height:1!important;font-weight:900!important;letter-spacing:-.065em!important;text-transform:uppercase!important;margin:0!important}
+.sectionhead p,.section p{font-family:inherit!important}
+.sectionhead .textbutton{font-size:11px!important;padding:8px 10px!important;white-space:normal}
+.cards,.media-grid,.places-records{gap:17px!important}
+#music-grid.album-grid,#friend-music-grid.album-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important;padding:0!important;overflow:visible!important;scroll-snap-type:none!important}
+#music-grid.album-grid:after,#friend-music-grid.album-grid:after{display:none!important;content:none!important}
+#music-grid .entry,#friend-music-grid .entry{flex:initial!important;width:auto!important;margin:0!important}
+.entry,.media-card{background:#fffefa!important;border:1px solid #111!important;padding:11px!important;box-shadow:3px 3px 0 #111!important;border-radius:0!important;transform:none!important}
+.entry .art,.media-card img,.media-poster{position:relative!important;background:#eee!important;border:0!important;box-shadow:none!important;overflow:hidden!important;filter:grayscale(1) contrast(1.28)!important}
+.entry .art:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;opacity:.2;background-image:radial-gradient(#000 0.7px,transparent 1px);background-size:3px 3px;mix-blend-mode:multiply}
+.entry .art img{filter:grayscale(1) contrast(1.22)!important;transition:filter .2s ease}
+.entry .art:hover img{filter:grayscale(.65) contrast(1.1)!important}
+.entry h3{font-size:15px!important;font-weight:900!important;letter-spacing:-.04em!important;text-transform:uppercase!important;border-top:1px dashed #111!important;padding-top:10px!important}
+.entry .sub,.entry .score,.entry .comment,.entry .format,.entry .privacy-row{font-size:11px!important}
+.entry .score{border-top:1px dotted #777!important;padding-top:7px!important}
+.entry .edit-entry,.entry .delete,.entry .save-photo-view,.entry .privacy-toggle{font-size:10px!important;text-transform:uppercase!important}
+.empty{border:2px dashed #111!important;background:transparent!important;box-shadow:none!important}
+#eats-grid,#moments-grid,#friend-eats-grid,#friend-moments-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+#eats-grid .entry,#moments-grid .entry{min-width:0!important}
+.media-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr))!important}
+#places-map{filter:grayscale(1)!important;border:1px solid #111!important}
+dialog{background:#fffefa!important;border:2px solid #111!important;border-radius:0!important;box-shadow:9px 9px 0 #111!important;color:#111!important}
+dialog::backdrop{background:#0009!important}
+dialog h3{font-weight:900!important;text-transform:uppercase!important}
+input,textarea,select{border-radius:0!important}
+footer,.end{background:#fffefa!important;border-top:2px dashed #111!important;padding:35px 44px!important}
+footer:after{content:"||||| || ||||| ||| || |||||||  0 0 0 1";display:block;font-size:17px;letter-spacing:-1px;white-space:nowrap;overflow:hidden}
+.end p{font-family:"Courier New",Courier,monospace!important;font-weight:900!important;letter-spacing:-.06em!important}
+@media(max-width:900px){
+ body{margin:0 auto 30px!important;max-width:100%!important}
+ header{padding:28px 18px 15px!important}
+ header:before{left:18px}
+ header nav{border-top:1px dotted #111!important;padding-top:12px!important;overflow-x:auto!important}
+ .hero{padding:42px 18px 32px!important}
+ .section{padding:36px 18px 48px!important}
+ footer,.end{padding:30px 18px!important}
+ #music-grid.album-grid,#friend-music-grid.album-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important}
+ #eats-grid,#moments-grid,#friend-eats-grid,#friend-moments-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important;overflow:visible!important;gap:13px!important}
+ #music-grid .entry,#friend-music-grid .entry{width:auto!important;flex:auto!important}
+ .entry{padding:8px!important;box-shadow:2px 2px 0 #111!important}
+ .sectionhead{flex-direction:row!important;gap:8px!important}
+ .sectionhead .textbutton{font-size:9px!important}
+ .hero h1{font-size:clamp(56px,17vw,112px)!important}
+ .herofoot{gap:8px!important;flex-wrap:wrap!important}
+}
+@media(max-width:380px){
+ header .outline{padding:7px 6px!important;font-size:9px!important}
+ #music-grid.album-grid,#eats-grid,#moments-grid{gap:10px!important}
+ .section h2{font-size:35px!important}
+}
+@media(prefers-reduced-motion:reduce){.entry .art img{transition:none!important}}
