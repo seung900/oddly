@@ -797,3 +797,42 @@ header #add:hover{background:#333}
  #eats-grid .entry:after{left:9px;right:9px;font-size:8px}
  #eats-grid .entry .delete:after{left:14%;right:14%}
 }
+
+
+/* EATS pinned receipt wall: compact desktop scale + deliberately imperfect placement. */
+@media(min-width:901px){
+ #eats-grid.food-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:36px 22px!important;
+  justify-items:center!important;
+  align-items:start!important;
+  padding:25px 12px 38px!important;
+ }
+ #eats-grid .entry{width:min(100%,270px)!important;max-width:270px!important}
+ #eats-grid .entry .art{aspect-ratio:4/3!important}
+}
+#eats-grid .entry{
+ --tilt:-2.3deg;
+ --shift:0px;
+ transform:translateY(var(--shift)) rotate(var(--tilt))!important;
+ transform-origin:50% 12%!important;
+ transition:transform .22s ease,box-shadow .22s ease!important;
+}
+#eats-grid .entry:nth-child(7n+1){--tilt:-3.5deg;--shift:9px}
+#eats-grid .entry:nth-child(7n+2){--tilt:2.8deg;--shift:-8px}
+#eats-grid .entry:nth-child(7n+3){--tilt:-1.1deg;--shift:16px}
+#eats-grid .entry:nth-child(7n+4){--tilt:3.9deg;--shift:3px}
+#eats-grid .entry:nth-child(7n+5){--tilt:-2.7deg;--shift:-11px}
+#eats-grid .entry:nth-child(7n+6){--tilt:1.4deg;--shift:11px}
+#eats-grid .entry:nth-child(7n){--tilt:-4deg;--shift:-4px}
+#eats-grid .entry:hover,#eats-grid .entry:focus-within{
+ transform:translateY(calc(var(--shift) - 5px)) rotate(0deg)!important;
+ box-shadow:0 10px 24px #0000002c!important;
+ z-index:5!important;
+}
+@media(max-width:900px){
+ #eats-grid .entry:nth-child(n){--shift:0px}
+ #eats-grid .entry:nth-child(odd){--tilt:-2deg}
+ #eats-grid .entry:nth-child(even){--tilt:2.3deg}
+ #eats-grid.food-grid{column-gap:18px!important;row-gap:29px!important;padding-left:9px!important;padding-right:9px!important}
+}
