@@ -55,46 +55,76 @@ async function cloudPull(first=false){
    return {...e,...(old?.image?{image:old.image}:{})};
   }).sort((a,b)=>(b.created||0)-(a.created||0));
   entries=next;render();
-  // Load visible/latest records first, then the rest in small requests.
-  // Large base64 payloads decoded concurrently can stall mobile Safari.
-  const priority=new Set();
-  for(const type of ['music','eats','moments']){
-   const visible=entries.filter(e=>e.type===type).slice(0,type==='moments'?6:8);
-   for(const entry of visible)priority.add(entry.id);
-  }
-  const ordered=[...records.filter(e=>priority.has(e.id)),...records.filter(e=>!priority.has(e.id))];
-  for(let offset=0;offset<ordered.length;offset+=8){
-   if(!current())return;
-   const groups=[ordered.slice(offset,offset+4),ordered.slice(offset+4,offset+8)].filter(group=>group.length);
-   const results=await Promise.all(groups.map(group=>cloudClient.from('archive_entries').select('id,entry_data').eq('user_id',userId).in('id',group.map(e=>e.id))));
-   const failure=results.find(result=>result.error);if(failure)throw failure.error;
-   if(!current())return;
-   const data=results.flatMap(result=>result.data||[]);
-   const byId=new Map(data.map(row=>[row.id,row.entry_data]));
-   entries=entries.map(e=>byId.has(e.id)?{...e,...byId.get(e.id)}:e);
-   for(const row of data){
-    const entry=row.entry_data;
-    if(!entry?.image)continue;
+  // Fetch artwork only when it is near the viewport. Unlike the old
+  // background loop, this does not download every embedded photo on mobile.
+  const loaded=new Set();
+  const pending=[];
+  let active=0;
+  const fetchOne=async(id)=>{
+   try{
+    const {data,error}=await cloudClient.from('archive_entries')
+     .select('id,entry_data').eq('user_id',userId).eq('id',id).single();
+    if(error)throw error;
+    if(!current()||!data)return;
+    const entry=data.entry_data;
+    entries=entries.map(e=>e.id===id?{...e,...entry}:e);
+    if(!entry?.image)return;
     for(const art of document.querySelectorAll('.art[data-entry-id]')){
-     if(art.dataset.entryId!==row.id)continue;
+     if(art.dataset.entryId!==id)continue;
      const img=art.querySelector('img');
      if(img){if(img.getAttribute('src')!==entry.image)img.src=entry.image;}
-     else {
+     else{
       const fresh=document.createElement('img');
-      fresh.src=entry.image;
-      fresh.alt=entry.momentTitle||entry.food||entry.album||'';
+      fresh.src=entry.image;fresh.alt=entry.momentTitle||entry.food||entry.album||'';
       fresh.loading='lazy';fresh.decoding='async';
       const placeholder=art.querySelector('.placeholder');
-      if(placeholder)placeholder.replaceWith(fresh);
-      else art.prepend(fresh);
+      if(placeholder)placeholder.replaceWith(fresh);else art.prepend(fresh);
      }
     }
+   }catch(err){loaded.delete(id);console.warn('Artwork load failed',id,err);}
+  };
+  const pump=()=>{
+   while(active<2&&pending.length&&current()){
+    const id=pending.shift();active++;
+    fetchOne(id).finally(()=>{active--;pump();});
    }
+  };
+  const request=id=>{
+   if(!id||loaded.has(id)||!records.some(e=>e.id===id))return;
+   const cached=entries.find(e=>e.id===id);
+   if(cached?.image){loaded.add(id);return;}
+   loaded.add(id);pending.push(id);pump();
+  };
+  if(window.archiveArtworkObserver)window.archiveArtworkObserver.disconnect();
+  const observer=typeof IntersectionObserver==='function'
+   ?new IntersectionObserver(items=>{
+     for(const item of items)if(item.isIntersecting){
+      request(item.target.dataset.entryId);observer.unobserve(item.target);
+     }
+    },{rootMargin:'350px 250px'})
+   :null;
+  window.archiveArtworkObserver=observer;
+  const observe=()=>{
+   if(!current())return;
+   for(const art of document.querySelectorAll('.art[data-entry-id]')){
+    if(art.dataset.artObserved===String(generation))continue;
+    art.dataset.artObserved=String(generation);
+    if(observer)observer.observe(art);else request(art.dataset.entryId);
+   }
+  };
+  observe();
+  // Paging and archive view changes rebuild cards; watch for new artwork.
+  if(window.archiveArtworkMutation)window.archiveArtworkMutation.disconnect();
+  const mutation=new MutationObserver(()=>observe());
+  window.archiveArtworkMutation=mutation;
+  for(const type of ['music','eats','moments']){
+   const grid=document.querySelector('#'+type+'-grid');
+   if(grid)mutation.observe(grid,{childList:true});
   }
   if(!current())return;
   // Never write a partial image-less index to the persistent cache.
   try{localStorage.setItem(ownerKey,userId);}catch(e){console.warn(e);}
-  try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache full',e);}
+  // Do not cache incomplete image-less records; retain the previous complete cache.
   cloudMessage('동기화 완료! '+entries.length+'개 기록.');
  }catch(e){
   console.error('Archive sync failed',e);
