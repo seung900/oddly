@@ -866,3 +866,43 @@ header #add:hover{background:#333}
  #eats-grid.food-grid{gap:16px!important;padding:22px 12px 34px!important}
  #eats-grid.food-grid>.entry{flex:0 0 min(66vw,245px)!important;width:min(66vw,245px)!important}
 }
+
+
+/* Fix: mobile EATS is ONE readable horizontal row, not the legacy 2x2 grid.
+   Scoped exclusively to EATS so MOMENTS' 2-row mobile layout stays unchanged. */
+@media(max-width:900px){
+  body.touch-archive #eats-grid.food-grid{
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:nowrap!important;
+    grid-template-rows:none!important;
+    grid-template-columns:none!important;
+    grid-auto-flow:initial!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    gap:18px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    scroll-snap-type:x mandatory!important;
+    scroll-padding-inline:13px!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-x:contain!important;
+    padding:24px 13px 40px!important;
+  }
+  body.touch-archive #eats-grid.food-grid > .entry,
+  body.touch-archive #eats-grid.food-grid > .entry:nth-child(4n+1){
+    flex:0 0 clamp(250px,84vw,350px)!important;
+    width:clamp(250px,84vw,350px)!important;
+    max-width:350px!important;
+    min-width:0!important;
+    scroll-snap-align:start!important;
+  }
+  body.touch-archive #eats-grid.food-grid .entry h3{
+    font-size:17px!important;
+  }
+  body.touch-archive #eats-grid.food-grid .entry .sub{
+    font-size:12px!important;
+  }
+  body.touch-archive #eats-grid.food-grid .entry:nth-child(odd){--tilt:-1.6deg}
+  body.touch-archive #eats-grid.food-grid .entry:nth-child(even){--tilt:1.7deg}
+}
