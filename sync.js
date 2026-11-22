@@ -17,13 +17,9 @@ function cloudLoading(active){
 }
 function cloudMessage(msg){cloudStatus.textContent=msg;}
 function restoreOwnedCache(userId){
- try{
-  if(localStorage.getItem(ownerKey)!==userId)return false;
-  const cached=JSON.parse(localStorage.getItem(KEY)||'[]');
-  if(!Array.isArray(cached))return false;
-  entries=cached.filter(e=>e&&typeof e.id==='string'&&['music','eats','moments'].includes(e.type));
-  return true;
- }catch(e){console.warn('Archive cache unavailable:',e);return false;}
+ // Avoid parsing megabytes of stale base64 photos on every mobile launch.
+ // The server index is the source of truth; existing local cache remains untouched.
+ return false;
 }
 function cloudLocalSave(){try{localStorage.setItem(KEY,JSON.stringify(entries));}catch(e){console.warn('Local cache unavailable; cloud records remain accessible:',e);}render();}
 function cloudUi(){
